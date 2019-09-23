@@ -5,6 +5,12 @@ pub struct Secret {
     value: &'static str,
 }
 
+impl PartialEq for Secret {
+    fn eq(&self, other: &Self) -> bool {
+        self.key == other.key && self.value == other.value
+    }
+}
+
 impl Secret {
     pub fn new(key: &'static str, value: &'static str) -> Self {
         Secret { key, value }

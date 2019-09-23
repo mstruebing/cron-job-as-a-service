@@ -4,7 +4,8 @@ use crate::secret::Secret;
 pub struct Job {
     // TODO: Add command history
     schedule: &'static str,
-    command: &'static str,
+    // TODO: Remove pub modifier and add a getter
+    pub command: &'static str,
     last_run: u64,
     next_run: u64,
     last_run_succeeded: bool,

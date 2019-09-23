@@ -11,6 +11,15 @@ impl PartialEq for Secret {
     }
 }
 
+impl Clone for Secret {
+    fn clone(&self) -> Self {
+        Secret {
+            key: self.key,
+            value: self.value,
+        }
+    }
+}
+
 impl Secret {
     pub fn new(key: &'static str, value: &'static str) -> Self {
         Secret { key, value }

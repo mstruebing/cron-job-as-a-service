@@ -11,6 +11,30 @@ pub struct Job {
     secrets: Vec<Secret>,
 }
 
+impl PartialEq for Job {
+    fn eq(&self, other: &Self) -> bool {
+        self.schedule == other.schedule
+            && self.command == other.command
+            && self.last_run == other.last_run
+            && self.next_run == other.next_run
+            && self.last_run_succeeded == other.last_run_succeeded
+            && self.secrets == other.secrets
+    }
+}
+
+impl Clone for Job {
+    fn clone(&self) -> Self {
+        Job {
+            schedule: self.schedule,
+            command: self.command,
+            last_run: self.last_run,
+            next_run: self.next_run,
+            last_run_succeeded: self.last_run_succeeded,
+            secrets: self.secrets.clone(),
+        }
+    }
+}
+
 impl Job {
     pub fn new(
         schedule: &'static str,

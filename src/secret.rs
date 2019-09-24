@@ -24,10 +24,6 @@ impl Secret {
         Secret { key, value }
     }
 
-    pub fn show(&self) {
-        println!("{}: {}", self.key, self.value)
-    }
-
     pub fn drop_table() -> &'static str {
         "DROP TABLE IF EXISTS secrets;"
     }

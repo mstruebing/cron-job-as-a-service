@@ -8,7 +8,7 @@ use postgres::Error;
 fn main() -> Result<(), Error> {
     let secret = secret::Secret::new("hello", "world");
     let job = job::Job::new("0 * * * *", "echo $hello", 0, 1, vec![secret.clone()]);
-    let mut user = user::User::new("max@mustermann.de", "abcdefg1", vec![job.clone()]);
+    let mut user = user::User::new(None, "someone@example.com", "abcdefg1", vec![job.clone()]);
 
     let job = job::Job::new(
         "0 * * * *",
@@ -19,8 +19,9 @@ fn main() -> Result<(), Error> {
     );
     user.add_job(job.clone());
 
-    println!("{:?}", user);
-
     database::reset()?;
+    user.save()?;
+
+    println!("{:?}", user);
     Ok(())
 }

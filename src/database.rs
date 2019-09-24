@@ -5,7 +5,7 @@ use crate::secret::Secret;
 use crate::user::User;
 use postgres::{Connection, Error, TlsMode};
 
-fn connection() -> Connection {
+pub fn connection() -> Connection {
     // TODO: Use env variables/secrets
     Connection::connect(
         "postgres://postgres:postgres@localhost:5432/cronjob_as_a_service",

@@ -2,10 +2,11 @@ use crate::secret::Secret;
 
 #[derive(Debug)]
 pub struct Job {
-    schedule: &'static str,
+    pub id: Option<i32>,
+    pub schedule: &'static str,
     pub command: &'static str,
-    last_run: u64,
-    next_run: u64,
+    pub last_run: u64,
+    pub next_run: u64,
     secrets: Vec<Secret>,
 }
 
@@ -22,6 +23,7 @@ impl PartialEq for Job {
 impl Clone for Job {
     fn clone(&self) -> Self {
         Job {
+            id: None,
             schedule: self.schedule,
             command: self.command,
             last_run: self.last_run,
@@ -40,6 +42,7 @@ impl Job {
         secrets: Vec<Secret>,
     ) -> Self {
         Job {
+            id: None,
             schedule,
             command,
             last_run,
@@ -55,9 +58,10 @@ impl Job {
         "CREATE TABLE jobs (
             id SERIAL PRIMARY KEY NOT NULL,
             user_id INTEGER REFERENCES users(id) NOT NULL,
+            schedule TEXT NOT NULL,
             command TEXT NOT NULL,
-            last_run TIMESTAMP,
-            next_run TIMESTAMP NOT NULL
+            last_run INTEGER,
+            next_run INTEGER NOT NULL
             );"
     }
 }

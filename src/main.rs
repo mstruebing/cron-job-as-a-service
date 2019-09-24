@@ -1,8 +1,11 @@
+mod database;
 mod job;
 mod secret;
 mod user;
 
-fn main() {
+use postgres::Error;
+
+fn main() -> Result<(), Error> {
     let secret = secret::Secret::new("hello", "world");
     secret.show();
     let job = job::Job::new("0 * * * *", "echo $hello", 0, 1, vec![secret.clone()]);
@@ -18,4 +21,7 @@ fn main() {
     user.add_job(job.clone());
 
     println!("{:?}", user);
+
+    database::reset()?;
+    Ok(())
 }

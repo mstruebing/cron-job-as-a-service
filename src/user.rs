@@ -20,6 +20,17 @@ impl User {
         self.jobs.push(job.clone());
         self.clone()
     }
+
+    pub fn drop_table() -> &'static str {
+        "DROP TABLE IF EXISTS users;"
+    }
+    pub fn create_table() -> &'static str {
+        "CREATE TABLE users (
+            id SERIAL PRIMARY KEY NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+            );"
+    }
 }
 
 impl Clone for User {

@@ -27,6 +27,18 @@ impl Secret {
     pub fn show(&self) {
         println!("{}: {}", self.key, self.value)
     }
+
+    pub fn drop_table() -> &'static str {
+        "DROP TABLE IF EXISTS secrets;"
+    }
+    pub fn create_table() -> &'static str {
+        "CREATE TABLE secrets (
+            id SERIAL PRIMARY KEY NOT NULL,
+            job_id INTEGER REFERENCES jobs(id),
+            key TEXT NOT NULL,
+            value TEXT NOT NULL
+            );"
+    }
 }
 
 #[cfg(test)]

@@ -47,6 +47,19 @@ impl Job {
             secrets,
         }
     }
+
+    pub fn drop_table() -> &'static str {
+        "DROP TABLE IF EXISTS jobs;"
+    }
+    pub fn create_table() -> &'static str {
+        "CREATE TABLE jobs (
+            id SERIAL PRIMARY KEY NOT NULL,
+            user_id INTEGER REFERENCES users(id) NOT NULL,
+            command TEXT NOT NULL,
+            last_run TIMESTAMP,
+            next_run TIMESTAMP NOT NULL
+            );"
+    }
 }
 
 #[cfg(test)]

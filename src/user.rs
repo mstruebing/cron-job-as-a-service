@@ -43,7 +43,7 @@ mod tests {
         let password = "pa$$word";
 
         let secrets = vec![Secret::new("hello", "world")];
-        let job = Job::new("0 * * * *", "echo $hello", 0, 1, true, secrets);
+        let job = Job::new("0 * * * *", "echo $hello", 0, 1, secrets);
         let jobs = vec![job.clone()];
         let user = User::new(email, password, jobs.clone());
 
@@ -58,7 +58,7 @@ mod tests {
         let password = "pa$$word";
 
         let secrets = vec![Secret::new("hello", "world")];
-        let job = Job::new("0 * * * *", "echo $hello", 0, 1, true, secrets.clone());
+        let job = Job::new("0 * * * *", "echo $hello", 0, 1, secrets.clone());
         let jobs = vec![job.clone()];
         let mut user = User::new(email, password, jobs.clone());
 
@@ -67,7 +67,6 @@ mod tests {
             "echo $hello Motherfucker",
             0,
             1,
-            true,
             secrets.clone(),
         );
 

@@ -1,6 +1,5 @@
 #[derive(Debug)]
 pub struct Secret {
-    // TODO: Add id
     key: &'static str,
     value: &'static str,
 }

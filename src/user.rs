@@ -43,7 +43,7 @@ impl User {
             );"
     }
 
-    pub fn save_new_user(&mut self) -> Result<User, Error> {
+    pub fn save_new(&mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         for row in &connection.query(
@@ -61,14 +61,14 @@ impl User {
     }
 
     // TODO: Implement
-    pub fn update_user(&mut self) -> Result<User, Error> {
+    pub fn update(&mut self) -> Result<User, Error> {
         Ok(self.clone())
     }
 
     pub fn save(&mut self) -> Result<User, Error> {
         match self.id {
-            None => return self.save_new_user(),
-            Some(_) => return self.update_user(),
+            None => return self.save_new(),
+            Some(_) => return self.update(),
         }
     }
 }

@@ -67,8 +67,8 @@ impl User {
 
     pub fn save(&mut self) -> Result<User, Error> {
         match self.id {
-            None => return self.save_new(),
-            Some(_) => return self.update(),
+            None => self.save_new(),
+            Some(_) => self.update(),
         }
     }
 }

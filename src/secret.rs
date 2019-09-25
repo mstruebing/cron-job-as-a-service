@@ -1,22 +1,7 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Secret {
     key: &'static str,
     value: &'static str,
-}
-
-impl PartialEq for Secret {
-    fn eq(&self, other: &Self) -> bool {
-        self.key == other.key && self.value == other.value
-    }
-}
-
-impl Clone for Secret {
-    fn clone(&self) -> Self {
-        Secret {
-            key: self.key,
-            value: self.value,
-        }
-    }
 }
 
 impl Secret {

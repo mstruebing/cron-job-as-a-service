@@ -3,7 +3,7 @@ use postgres::Error;
 use crate::database;
 use crate::secret::Secret;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Job {
     pub id: Option<i32>,
     pub schedule: &'static str,
@@ -11,29 +11,6 @@ pub struct Job {
     pub last_run: u64,
     pub next_run: u64,
     secrets: Vec<Secret>,
-}
-
-impl PartialEq for Job {
-    fn eq(&self, other: &Self) -> bool {
-        self.schedule == other.schedule
-            && self.command == other.command
-            && self.last_run == other.last_run
-            && self.next_run == other.next_run
-            && self.secrets == other.secrets
-    }
-}
-
-impl Clone for Job {
-    fn clone(&self) -> Self {
-        Job {
-            id: None,
-            schedule: self.schedule,
-            command: self.command,
-            last_run: self.last_run,
-            next_run: self.next_run,
-            secrets: self.secrets.clone(),
-        }
-    }
 }
 
 impl Job {

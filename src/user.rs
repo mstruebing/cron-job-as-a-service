@@ -3,12 +3,12 @@ use postgres::Error;
 use crate::database;
 use crate::job::Job;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct User {
-    id: Option<i32>,
-    email: &'static str,
-    password: &'static str,
-    jobs: Vec<Job>,
+    pub id: Option<i32>,
+    pub email: &'static str,
+    pub password: &'static str,
+    pub jobs: Vec<Job>,
 }
 
 impl User {
@@ -69,17 +69,6 @@ impl User {
         match self.id {
             None => self.save_new(),
             Some(_) => self.update(),
-        }
-    }
-}
-
-impl Clone for User {
-    fn clone(&self) -> Self {
-        User {
-            id: self.id,
-            email: self.email,
-            password: self.password,
-            jobs: self.jobs.clone(),
         }
     }
 }

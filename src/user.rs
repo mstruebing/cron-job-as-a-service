@@ -43,7 +43,7 @@ impl User {
             );"
     }
 
-    pub fn save(&mut self) -> Result<User, Error> {
+    pub fn save_new_user(&mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         for row in &connection.query(
@@ -70,11 +70,10 @@ impl User {
 
                 if index == 0 {
                     query.push_str(job_values);
-                    continue;
+                } else {
+                    query.push_str(", ");
+                    query.push_str(job_values);
                 }
-
-                query.push_str(", ");
-                query.push_str(job_values);
 
                 if index == self.jobs.len() - 1 {
                     query.push_str(" RETURNING id;");
@@ -90,6 +89,18 @@ impl User {
         }
 
         Ok(self.clone())
+    }
+
+    // TODO: Implement
+    pub fn update_user(&mut self) -> Result<User, Error> {
+        Ok(self.clone())
+    }
+
+    pub fn save(&mut self) -> Result<User, Error> {
+        match self.id {
+            None => return self.save_new_user(),
+            Some(_) => return self.update_user(),
+        }
     }
 }
 

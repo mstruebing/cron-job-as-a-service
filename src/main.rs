@@ -20,8 +20,11 @@ fn main() -> Result<(), Error> {
     user.add_job(job.clone());
 
     database::reset()?;
+    let mut user = user.save()?;
+
+    // TODO: jobs are getting saved two times :(
+    user.email = "changed@mail.com";
     user.save()?;
 
-    println!("{:?}", user);
     Ok(())
 }

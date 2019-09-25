@@ -45,41 +45,72 @@ impl Job {
             );"
     }
 
-    pub fn save(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+    fn save_new(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+        if jobs.is_empty() {
+            return Ok(jobs);
+        }
+
         let mut jobs = jobs.clone();
 
-        if !jobs.is_empty() {
-            let mut query: String =
-                "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES "
-                    .to_owned();
-            for (index, job) in jobs.iter().enumerate() {
-                let job_values: &str = &format!(
-                    "({}, '{}', '{}', {}, {})",
-                    user_id, job.schedule, job.command, job.last_run, job.next_run,
-                );
+        let mut query: String =
+            "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES ".to_owned();
+        for (index, job) in jobs.iter().enumerate() {
+            let job_values: &str = &format!(
+                "({}, '{}', '{}', {}, {})",
+                user_id, job.schedule, job.command, job.last_run, job.next_run,
+            );
 
-                if index == 0 {
-                    query.push_str(job_values);
-                } else {
-                    query.push_str(", ");
-                    query.push_str(job_values);
-                }
-
-                if index == jobs.len() - 1 {
-                    query.push_str(" RETURNING id;");
-                }
+            if index == 0 {
+                query.push_str(job_values);
+            } else {
+                query.push_str(", ");
+                query.push_str(job_values);
             }
 
-            let connection = database::connection();
-            let rows = &connection.query(&query, &[])?;
-            for (index, row) in rows.iter().enumerate() {
-                let id: i32 = row.get(0);
-
-                jobs[index].id = Some(id);
+            if index == jobs.len() - 1 {
+                query.push_str(" RETURNING id;");
             }
         }
 
+        let connection = database::connection();
+        let rows = &connection.query(&query, &[])?;
+        for (index, row) in rows.iter().enumerate() {
+            let id: i32 = row.get(0);
+
+            jobs[index].id = Some(id);
+        }
+
         Ok(jobs)
+    }
+
+    // TODO: Implement
+    fn update(_user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+        Ok(jobs)
+    }
+
+    pub fn save(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+        if jobs.is_empty() {
+            return Ok(jobs);
+        }
+
+        let mut new_jobs: Vec<Job> = Vec::with_capacity(jobs.len());
+        let mut existing_jobs: Vec<Job> = Vec::with_capacity(jobs.len());
+
+        for job in jobs {
+            match job.id {
+                Some(_) => existing_jobs.push(job),
+                None => new_jobs.push(job),
+            }
+        }
+
+        let new_jobs = Job::save_new(user_id, new_jobs)?;
+        let existing_jobs = Job::update(user_id, existing_jobs)?;
+
+        let mut concat = Vec::with_capacity(new_jobs.len() + existing_jobs.len());
+        concat.extend(new_jobs);
+        concat.extend(existing_jobs);
+
+        Ok(concat)
     }
 }
 

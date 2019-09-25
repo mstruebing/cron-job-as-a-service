@@ -43,7 +43,7 @@ impl User {
             );"
     }
 
-    pub fn save_new(&mut self) -> Result<User, Error> {
+    fn save_new(&mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         for row in &connection.query(
@@ -54,14 +54,19 @@ impl User {
             self.id = Some(id);
         }
 
-        let jobs = Job::save(self.id.unwrap(), self.jobs.clone())?;
-        self.jobs = jobs;
+        self.jobs = Job::save(self.id.unwrap(), self.jobs.clone())?;
 
         Ok(self.clone())
     }
 
-    // TODO: Implement
-    pub fn update(&mut self) -> Result<User, Error> {
+    fn update(&mut self) -> Result<User, Error> {
+        let connection = database::connection();
+
+        let query = "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;";
+        connection.execute(query, &[&self.email, &self.password, &self.id.unwrap()])?;
+
+        self.jobs = Job::save(self.id.unwrap(), self.jobs.clone())?;
+
         Ok(self.clone())
     }
 

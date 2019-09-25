@@ -27,7 +27,7 @@ impl User {
     }
 
     pub fn add_job(&mut self, job: Job) -> Self {
-        self.jobs.push(job.clone());
+        self.jobs.push(job);
         self.clone()
     }
 

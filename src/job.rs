@@ -51,9 +51,9 @@ impl Job {
         }
 
         let mut jobs = jobs.clone();
-
         let mut query: String =
             "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES ".to_owned();
+
         for (index, job) in jobs.iter().enumerate() {
             let job_values: &str = &format!(
                 "({}, '{}', '{}', {}, {})",
@@ -74,9 +74,9 @@ impl Job {
 
         let connection = database::connection();
         let rows = &connection.query(&query, &[])?;
+
         for (index, row) in rows.iter().enumerate() {
             let id: i32 = row.get(0);
-
             jobs[index].id = Some(id);
         }
 

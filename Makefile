@@ -19,3 +19,6 @@ lint:
 
 start-db:
 	docker-compose up
+
+db-connect:
+	docker-compose exec postgresql 'psql --user postgres cronjob_as_a_service'

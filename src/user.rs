@@ -1,7 +1,7 @@
-use crate::job::Job;
+use postgres::Error;
 
 use crate::database;
-use postgres::Error;
+use crate::job::Job;
 
 #[derive(Debug)]
 pub struct User {
@@ -54,39 +54,8 @@ impl User {
             self.id = Some(id);
         }
 
-        if self.jobs.len() > 0 {
-            let mut query: String =
-                "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES "
-                    .to_owned();
-            for (index, job) in self.jobs.iter().enumerate() {
-                let job_values: &str = &format!(
-                    "({}, '{}', '{}', {}, {})",
-                    self.id.unwrap(),
-                    job.schedule,
-                    job.command,
-                    job.last_run,
-                    job.next_run,
-                );
-
-                if index == 0 {
-                    query.push_str(job_values);
-                } else {
-                    query.push_str(", ");
-                    query.push_str(job_values);
-                }
-
-                if index == self.jobs.len() - 1 {
-                    query.push_str(" RETURNING id;");
-                }
-            }
-
-            let rows = &connection.query(&query, &[])?;
-            for (index, row) in rows.iter().enumerate() {
-                let id: i32 = row.get(0);
-
-                self.jobs[index].id = Some(id);
-            }
-        }
+        let jobs = Job::save(self.id.unwrap(), self.jobs.clone())?;
+        self.jobs = jobs;
 
         Ok(self.clone())
     }

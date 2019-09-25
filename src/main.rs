@@ -2,6 +2,7 @@ mod database;
 mod job;
 mod secret;
 mod user;
+mod utils;
 
 use postgres::Error;
 
@@ -13,8 +14,8 @@ fn main() -> Result<(), Error> {
     let job = job::Job::new(
         "0 * * * *",
         "echo $hello Motherfucker",
-        0,
-        1,
+        utils::get_current_timestamp(),
+        utils::get_current_timestamp() + 1,
         vec![secret.clone()],
     );
     user.add_job(job.clone());

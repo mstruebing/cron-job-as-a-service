@@ -71,7 +71,7 @@ impl Job {
     pub fn save(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
         let mut jobs = jobs.clone();
 
-        if jobs.len() > 0 {
+        if !jobs.is_empty() {
             let mut query: String =
                 "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES "
                     .to_owned();

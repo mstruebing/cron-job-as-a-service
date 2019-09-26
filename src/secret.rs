@@ -5,8 +5,8 @@ use crate::database;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Secret {
     pub id: Option<i32>,
-    key: &'static str,
-    value: &'static str,
+    pub key: &'static str,
+    pub value: &'static str,
 }
 
 impl Secret {

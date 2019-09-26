@@ -9,8 +9,29 @@ use postgres::Error;
 // Contains nonsense currently, just to test these funcs :)
 fn main() -> Result<(), Error> {
     reset_db()?;
+
+    // test save
     save_user()?;
-    delete_user()?;
+    delete_user(Some(1))?;
+
+    // prepare test delete
+    save_user()?;
+    let secret = create_secret(Some(2));
+    let job = create_job(Some(2));
+
+    // test delete
+    secret.delete()?;
+    job.delete()?;
+    delete_user(Some(2))?;
+
+    // test update
+    save_user()?;
+    update_secret(Some(3))?;
+    update_job(Some(3))?;
+    update_user(Some(3))?;
+
+    // Cleanup
+    delete_user(Some(3))?;
 
     Ok(())
 }
@@ -25,8 +46,8 @@ pub fn save_user() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn delete_user() -> Result<(), Error> {
-    create_user(Some(1)).delete()?;
+pub fn delete_user(id: Option<i32>) -> Result<(), Error> {
+    create_user(id).delete()?;
     Ok(())
 }
 
@@ -52,4 +73,28 @@ pub fn create_job(id: Option<i32>) -> job::Job {
 
 pub fn create_secret(id: Option<i32>) -> secret::Secret {
     secret::Secret::new(id, "hello", "world")
+}
+
+pub fn update_secret(id: Option<i32>) -> Result<(), Error> {
+    let mut secret = create_secret(id);
+    secret.key = "CHANGED";
+    secret.value = "SECRET";
+    secret::Secret::save(id.unwrap(), vec![secret])?;
+    Ok(())
+}
+
+pub fn update_job(id: Option<i32>) -> Result<(), Error> {
+    let mut job = create_job(id);
+    job.command = "CHANGED COMMAND";
+    job::Job::update(id.unwrap(), vec![job])?;
+
+    Ok(())
+}
+
+pub fn update_user(id: Option<i32>) -> Result<(), Error> {
+    let mut user = create_user(id);
+    user.email = "changed@mail.com";
+    user.save()?;
+
+    Ok(())
 }

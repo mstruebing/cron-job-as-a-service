@@ -38,7 +38,7 @@ impl Job {
     pub fn create_table() -> &'static str {
         "CREATE TABLE jobs (
             id SERIAL PRIMARY KEY NOT NULL,
-            user_id INTEGER REFERENCES users(id) NOT NULL,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL ,
             schedule TEXT NOT NULL,
             command TEXT NOT NULL,
             last_run INTEGER,
@@ -142,6 +142,7 @@ mod tests {
     #[test]
     fn test_new() {
         let job = Job::new(
+            None,
             "0 * * * *",
             "echo $hello",
             0,

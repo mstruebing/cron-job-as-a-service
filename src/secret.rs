@@ -15,7 +15,7 @@ impl Secret {
     pub fn create_table() -> &'static str {
         "CREATE TABLE secrets (
             id SERIAL PRIMARY KEY NOT NULL,
-            job_id INTEGER REFERENCES jobs(id),
+            job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
             key TEXT NOT NULL,
             value TEXT NOT NULL
             );"

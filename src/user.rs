@@ -90,6 +90,17 @@ impl User {
             Some(_) => self.update(),
         }
     }
+
+    pub fn delete(self) -> Result<(), Error> {
+        match self.id {
+            Some(id) => {
+                let connection = database::connection();
+                connection.execute("DELETE FROM users WHERE id = $1", &[&id])?;
+                Ok(())
+            }
+            None => Ok(()),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -103,7 +114,7 @@ mod tests {
         let password = "pa$$word";
 
         let secrets = vec![Secret::new("hello", "world")];
-        let job = Job::new("0 * * * *", "echo $hello", 0, 1, secrets);
+        let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets);
         let jobs = vec![job.clone()];
         let user = User::new(None, email, password, jobs.clone());
 
@@ -118,7 +129,7 @@ mod tests {
         let password = "pa$$word";
 
         let secrets = vec![Secret::new("hello", "world")];
-        let job = Job::new("0 * * * *", "echo $hello", 0, 1, secrets.clone());
+        let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets.clone());
         let jobs = vec![job.clone()];
         let mut user = User::new(None, email, password, jobs.clone());
 

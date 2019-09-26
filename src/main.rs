@@ -52,5 +52,10 @@ fn main() -> Result<(), Error> {
     user.add_job(job.clone());
     user.save()?;
 
+    let mut user_two = user.clone();
+    user.delete()?;
+
+    user_two.save()?;
+
     Ok(())
 }

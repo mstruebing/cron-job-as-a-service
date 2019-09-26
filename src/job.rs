@@ -1,4 +1,5 @@
 use postgres::Error;
+use std::process::Command;
 
 use crate::database;
 use crate::secret::Secret;
@@ -148,6 +149,13 @@ impl Job {
             }
             None => Ok(()),
         }
+    }
+
+    pub fn execute(self) -> Result<(), Error> {
+        // TODO: use alpine docker container
+        let args = format!("{}; {}", Secret::get_as_string(self.secrets), self.command);
+        Command::new("sh").arg("-c").arg(args).output()?;
+        Ok(())
     }
 }
 

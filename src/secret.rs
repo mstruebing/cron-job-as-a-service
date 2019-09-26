@@ -114,6 +114,15 @@ impl Secret {
 
         Ok(concat)
     }
+
+    pub fn get_as_string(secrets: Vec<Secret>) -> String {
+        let mut secret_string: String = String::from("");
+        for secret in secrets {
+            secret_string = format!("{}={} ", secret.key, secret.value);
+        }
+
+        secret_string
+    }
 }
 
 #[cfg(test)]

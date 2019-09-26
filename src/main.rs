@@ -33,6 +33,17 @@ fn main() -> Result<(), Error> {
     // Cleanup
     delete_user(Some(3))?;
 
+    // Test job execution
+    let job = job::Job::new(
+        None,
+        "",
+        "echo hello $hello > world.txt",
+        0,
+        0,
+        vec![create_secret(None)],
+    );
+    job.execute()?;
+
     Ok(())
 }
 

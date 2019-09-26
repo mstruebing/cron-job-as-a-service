@@ -133,6 +133,17 @@ impl Job {
 
         Ok(concat)
     }
+
+    pub fn delete(self) -> Result<(), Error> {
+        match self.id {
+            Some(id) => {
+                let connection = database::connection();
+                connection.execute("DELETE FROM jobs WHERE id = $1", &[&id])?;
+                Ok(())
+            }
+            None => Ok(()),
+        }
+    }
 }
 
 #[cfg(test)]

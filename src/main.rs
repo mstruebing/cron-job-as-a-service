@@ -50,6 +50,7 @@ fn main() -> Result<(), Error> {
 
     user.remove_job(job.clone());
     user.add_job(job.clone());
+    job.delete()?;
     user.save()?;
 
     let mut user_two = user.clone();

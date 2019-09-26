@@ -113,7 +113,7 @@ mod tests {
         let email = "someone@example.com";
         let password = "pa$$word";
 
-        let secrets = vec![Secret::new("hello", "world")];
+        let secrets = vec![Secret::new(None, "hello", "world")];
         let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets);
         let jobs = vec![job.clone()];
         let user = User::new(None, email, password, jobs.clone());
@@ -128,7 +128,7 @@ mod tests {
         let email = "someone@example.com";
         let password = "pa$$word";
 
-        let secrets = vec![Secret::new("hello", "world")];
+        let secrets = vec![Secret::new(None, "hello", "world")];
         let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets.clone());
         let jobs = vec![job.clone()];
         let mut user = User::new(None, email, password, jobs.clone());

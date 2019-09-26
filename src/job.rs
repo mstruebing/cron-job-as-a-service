@@ -79,6 +79,8 @@ impl Job {
         for (index, row) in rows.iter().enumerate() {
             let id: i32 = row.get(0);
             jobs[index].id = Some(id);
+
+            Secret::save(jobs[index].id.unwrap(), jobs[index].secrets.clone())?;
         }
 
         Ok(jobs)
@@ -104,6 +106,9 @@ impl Job {
                     &job.id.unwrap(),
                 ],
             )?;
+
+            // TODO: n+1
+            Secret::save(job.id.unwrap(), job.secrets.clone())?;
         }
 
         Ok(jobs)
@@ -158,13 +163,13 @@ mod tests {
             "echo $hello",
             0,
             1,
-            vec![Secret::new("hello", "world")],
+            vec![Secret::new(None, "hello", "world")],
         );
 
         assert_eq!(job.schedule, "0 * * * *");
         assert_eq!(job.command, "echo $hello");
         assert_eq!(job.last_run, 0);
         assert_eq!(job.next_run, 1);
-        assert_eq!(job.secrets, vec![Secret::new("hello", "world")]);
+        assert_eq!(job.secrets, vec![Secret::new(None, "hello", "world")]);
     }
 }

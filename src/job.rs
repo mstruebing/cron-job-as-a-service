@@ -8,21 +8,22 @@ pub struct Job {
     pub id: Option<i32>,
     pub schedule: &'static str,
     pub command: &'static str,
-    pub last_run: u64,
-    pub next_run: u64,
+    pub last_run: i32,
+    pub next_run: i32,
     secrets: Vec<Secret>,
 }
 
 impl Job {
     pub fn new(
+        id: Option<i32>,
         schedule: &'static str,
         command: &'static str,
-        last_run: u64,
-        next_run: u64,
+        last_run: i32,
+        next_run: i32,
         secrets: Vec<Secret>,
     ) -> Self {
         Job {
-            id: None,
+            id,
             schedule,
             command,
             last_run,
@@ -45,7 +46,7 @@ impl Job {
             );"
     }
 
-    fn save_new(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+    pub fn save_new(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
         if jobs.is_empty() {
             return Ok(jobs);
         }
@@ -83,8 +84,28 @@ impl Job {
         Ok(jobs)
     }
 
-    // TODO: Implement
-    fn update(_user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+    pub fn update(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+        if jobs.is_empty() {
+            return Ok(jobs);
+        }
+
+        for job in jobs.clone() {
+            let query = "UPDATE jobs SET user_id = $1, schedule = $2, command = $3, last_run = $4, next_run = $5 WHERE id = $6;";
+
+            let connection = database::connection();
+            connection.execute(
+                query,
+                &[
+                    &user_id,
+                    &job.schedule,
+                    &job.command,
+                    &job.last_run,
+                    &job.next_run,
+                    &job.id.unwrap(),
+                ],
+            )?;
+        }
+
         Ok(jobs)
     }
 

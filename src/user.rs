@@ -31,6 +31,20 @@ impl User {
         self.clone()
     }
 
+    pub fn remove_job(&mut self, job: Job) -> Self {
+        let mut new_jobs = Vec::with_capacity(self.jobs.len());
+
+        for j in self.jobs.clone() {
+            if job.id.unwrap() == j.id.unwrap() {
+                continue;
+            }
+
+            new_jobs.push(j);
+        }
+
+        self.clone()
+    }
+
     pub fn drop_table() -> &'static str {
         "DROP TABLE IF EXISTS users;"
     }
@@ -43,7 +57,7 @@ impl User {
             );"
     }
 
-    fn save_new(&mut self) -> Result<User, Error> {
+    pub fn save_new(&mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         for row in &connection.query(
@@ -59,7 +73,7 @@ impl User {
         Ok(self.clone())
     }
 
-    fn update(&mut self) -> Result<User, Error> {
+    pub fn update(&mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         let query = "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;";
@@ -109,6 +123,7 @@ mod tests {
         let mut user = User::new(None, email, password, jobs.clone());
 
         let job = Job::new(
+            None,
             "0 * * * *",
             "echo $hello Motherfucker",
             0,

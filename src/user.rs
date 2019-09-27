@@ -26,15 +26,15 @@ impl User {
         }
     }
 
-    pub fn add_job(&mut self, job: Job) -> Self {
+    pub fn add_job(mut self, job: Job) -> Self {
         self.jobs.push(job);
-        self.clone()
+        self
     }
 
-    pub fn remove_job(&mut self, job: Job) -> Self {
+    pub fn remove_job(self, job: Job) -> Self {
         let mut new_jobs = Vec::with_capacity(self.jobs.len());
 
-        for j in self.jobs.clone() {
+        for j in &self.jobs {
             if job.id.unwrap() == j.id.unwrap() {
                 continue;
             }
@@ -42,7 +42,7 @@ impl User {
             new_jobs.push(j);
         }
 
-        self.clone()
+        self
     }
 
     pub fn drop_table() -> &'static str {
@@ -57,7 +57,7 @@ impl User {
             );"
     }
 
-    pub fn save_new(&mut self) -> Result<User, Error> {
+    pub fn save_new(mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         for row in &connection.query(
@@ -68,23 +68,23 @@ impl User {
             self.id = Some(id);
         }
 
-        self.jobs = Job::save(self.id.unwrap(), self.jobs.clone())?;
+        self.jobs = Job::save(self.id.unwrap(), self.jobs)?;
 
-        Ok(self.clone())
+        Ok(self)
     }
 
-    pub fn update(&mut self) -> Result<User, Error> {
+    pub fn update(mut self) -> Result<User, Error> {
         let connection = database::connection();
 
         let query = "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;";
         connection.execute(query, &[&self.email, &self.password, &self.id.unwrap()])?;
 
-        self.jobs = Job::save(self.id.unwrap(), self.jobs.clone())?;
+        self.jobs = Job::save(self.id.unwrap(), self.jobs)?;
 
-        Ok(self.clone())
+        Ok(self)
     }
 
-    pub fn save(&mut self) -> Result<User, Error> {
+    pub fn save(self) -> Result<User, Error> {
         match self.id {
             None => self.save_new(),
             Some(_) => self.update(),
@@ -116,7 +116,7 @@ mod tests {
         let secrets = vec![Secret::new(None, "hello", "world")];
         let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets);
         let jobs = vec![job.clone()];
-        let user = User::new(None, email, password, jobs.clone());
+        let user = User::new(None, email, password, jobs);
 
         assert_eq!(user.email, email);
         assert_eq!(user.password, password);
@@ -131,7 +131,7 @@ mod tests {
         let secrets = vec![Secret::new(None, "hello", "world")];
         let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets.clone());
         let jobs = vec![job.clone()];
-        let mut user = User::new(None, email, password, jobs.clone());
+        let user = User::new(None, email, password, jobs.clone());
 
         let job = Job::new(
             None,
@@ -142,7 +142,7 @@ mod tests {
             secrets.clone(),
         );
 
-        user.add_job(job);
+        let user = user.add_job(job);
 
         assert_eq!(user.jobs.len(), 2);
         assert_eq!(user.jobs[0].command, "echo $hello");

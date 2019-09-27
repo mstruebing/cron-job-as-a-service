@@ -47,12 +47,11 @@ impl Job {
             );"
     }
 
-    pub fn save_new(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
+    pub fn save_new(user_id: i32, mut jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
         if jobs.is_empty() {
             return Ok(jobs);
         }
 
-        let mut jobs = jobs.clone();
         let mut query: String =
             "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES ".to_owned();
 
@@ -81,7 +80,7 @@ impl Job {
             let id: i32 = row.get(0);
             jobs[index].id = Some(id);
 
-            Secret::save(jobs[index].id.unwrap(), jobs[index].secrets.clone())?;
+            Secret::save(jobs[index].id.unwrap(), &jobs[index].secrets)?;
         }
 
         Ok(jobs)
@@ -92,7 +91,7 @@ impl Job {
             return Ok(jobs);
         }
 
-        for job in jobs.clone() {
+        for job in jobs.iter() {
             let query = "UPDATE jobs SET user_id = $1, schedule = $2, command = $3, last_run = $4, next_run = $5 WHERE id = $6;";
 
             let connection = database::connection();
@@ -109,7 +108,7 @@ impl Job {
             )?;
 
             // TODO: n+1
-            Secret::save(job.id.unwrap(), job.secrets.clone())?;
+            Secret::save(job.id.unwrap(), &job.secrets)?;
         }
 
         Ok(jobs)

@@ -2,7 +2,7 @@ use postgres::Error;
 
 use crate::database;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Secret {
     pub id: Option<i32>,
     pub key: &'static str,
@@ -26,12 +26,11 @@ impl Secret {
             );"
     }
 
-    pub fn save_new(job_id: i32, secrets: Vec<Secret>) -> Result<Vec<Secret>, Error> {
+    pub fn save_new(job_id: i32, mut secrets: Vec<Secret>) -> Result<Vec<Secret>, Error> {
         if secrets.is_empty() {
             return Ok(secrets);
         }
 
-        let mut secrets = secrets.clone();
         let mut query: String = "INSERT INTO secrets (job_id, key, value) VALUES ".to_owned();
 
         for (index, secret) in secrets.iter().enumerate() {
@@ -66,7 +65,7 @@ impl Secret {
             return Ok(secrets);
         }
 
-        for secret in secrets.clone() {
+        for secret in secrets.iter() {
             let connection = database::connection();
 
             let query = "UPDATE secrets SET job_id = $1, key = $2, value = $3 WHERE id = $4;";
@@ -90,9 +89,9 @@ impl Secret {
         }
     }
 
-    pub fn save(job_id: i32, secrets: Vec<Secret>) -> Result<Vec<Secret>, Error> {
+    pub fn save(job_id: i32, secrets: &[Secret]) -> Result<Vec<Secret>, Error> {
         if secrets.is_empty() {
-            return Ok(secrets);
+            return Ok(Vec::new());
         }
 
         let mut new_secrets: Vec<Secret> = Vec::with_capacity(secrets.len());
@@ -100,8 +99,8 @@ impl Secret {
 
         for job in secrets {
             match job.id {
-                Some(_) => existing_secrets.push(job),
-                None => new_secrets.push(job),
+                Some(_) => existing_secrets.push(*job),
+                None => new_secrets.push(*job),
             }
         }
 

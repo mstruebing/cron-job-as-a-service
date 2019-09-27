@@ -90,7 +90,7 @@ pub fn update_secret(id: Option<i32>) -> Result<(), Error> {
     let mut secret = create_secret(id);
     secret.key = "CHANGED";
     secret.value = "SECRET";
-    secret::Secret::save(id.unwrap(), vec![secret])?;
+    secret::Secret::save(id.unwrap(), &[secret])?;
     Ok(())
 }
 

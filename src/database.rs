@@ -1,14 +1,22 @@
 extern crate postgres;
 
+use std::env;
+
 use crate::job::Job;
 use crate::secret::Secret;
 use crate::user::User;
 use postgres::{Connection, Error, TlsMode};
 
 pub fn connection() -> Connection {
-    // TODO: Use env variables/secrets
     Connection::connect(
-        "postgres://postgres:postgres@localhost:5432/cronjob_as_a_service",
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            env::var("DATABASE_USER").unwrap(),
+            env::var("DATABASE_PASSWORD").unwrap(),
+            env::var("DATABASE_HOST").unwrap(),
+            env::var("DATABASE_PORT").unwrap(),
+            env::var("DATABASE_NAME").unwrap(),
+        ),
         TlsMode::None,
     )
     .unwrap()

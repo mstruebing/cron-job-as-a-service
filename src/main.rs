@@ -1,3 +1,5 @@
+use dotenv;
+
 mod database;
 mod job;
 mod secret;
@@ -8,6 +10,7 @@ use postgres::Error;
 
 // Contains nonsense currently, just to test these funcs :)
 fn main() -> Result<(), Error> {
+    dotenv::dotenv().ok();
     reset_db()?;
 
     // test save

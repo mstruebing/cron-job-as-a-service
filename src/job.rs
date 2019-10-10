@@ -47,102 +47,66 @@ impl Job {
             );"
     }
 
-    pub fn save_new(user_id: i32, mut jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
-        if jobs.is_empty() {
-            return Ok(jobs);
-        }
+    pub fn save_new(mut self, user_id: i32) -> Result<Self, Error> {
+        let connection = database::connection()?;
+        let query =
+            "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES ($1, $2, $3, $4, $5) RETURNING id;";
+        let rows = connection.query(
+            query,
+            &[
+                &user_id,
+                &self.schedule,
+                &self.command,
+                &self.last_run,
+                &self.next_run,
+            ],
+        )?;
 
-        let mut query: String =
-            "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES ".to_owned();
-
-        for (index, job) in jobs.iter().enumerate() {
-            let job_values: &str = &format!(
-                "({}, '{}', '{}', {}, {})",
-                user_id, job.schedule, job.command, job.last_run, job.next_run,
-            );
-
-            if index == 0 {
-                query.push_str(job_values);
-            } else {
-                query.push_str(", ");
-                query.push_str(job_values);
-            }
-
-            if index == jobs.len() - 1 {
-                query.push_str(" RETURNING id;");
-            }
-        }
-
-        let connection = database::connection();
-        let rows = &connection.query(&query, &[])?;
-
-        for (index, row) in rows.iter().enumerate() {
+        for row in rows.iter() {
             let id: i32 = row.get(0);
-            jobs[index].id = Some(id);
-
-            Secret::save(jobs[index].id.unwrap(), &jobs[index].secrets)?;
+            self.id = Some(id);
         }
 
-        Ok(jobs)
+        for (index, secret) in self.secrets.clone().iter().enumerate() {
+            self.secrets[index] = secret.save(self.id.unwrap())?;
+        }
+
+        Ok(self)
     }
 
-    pub fn update(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
-        if jobs.is_empty() {
-            return Ok(jobs);
+    pub fn update(mut self, user_id: i32) -> Result<Self, Error> {
+        let connection = database::connection()?;
+        let query = "UPDATE jobs SET user_id = $1, schedule = $2, command = $3, last_run = $4, next_run = $5 WHERE id = $6;";
+        connection.execute(
+            query,
+            &[
+                &user_id,
+                &self.schedule,
+                &self.command,
+                &self.last_run,
+                &self.next_run,
+                &self.id.unwrap(),
+            ],
+        )?;
+
+        for (index, secret) in self.secrets.clone().iter().enumerate() {
+            self.secrets[index] = secret.save(self.id.unwrap())?;
         }
 
-        for job in jobs.iter() {
-            let query = "UPDATE jobs SET user_id = $1, schedule = $2, command = $3, last_run = $4, next_run = $5 WHERE id = $6;";
-
-            let connection = database::connection();
-            connection.execute(
-                query,
-                &[
-                    &user_id,
-                    &job.schedule,
-                    &job.command,
-                    &job.last_run,
-                    &job.next_run,
-                    &job.id.unwrap(),
-                ],
-            )?;
-
-            // TODO: n+1
-            Secret::save(job.id.unwrap(), &job.secrets)?;
-        }
-
-        Ok(jobs)
+        Ok(self)
     }
 
-    pub fn save(user_id: i32, jobs: Vec<Job>) -> Result<Vec<Job>, Error> {
-        if jobs.is_empty() {
-            return Ok(jobs);
+    pub fn save(self, user_id: i32) -> Result<Self, Error> {
+        match self.id {
+            Some(_) => self.update(user_id),
+            None => self.save_new(user_id),
         }
-
-        let mut new_jobs: Vec<Job> = Vec::with_capacity(jobs.len());
-        let mut existing_jobs: Vec<Job> = Vec::with_capacity(jobs.len());
-
-        for job in jobs {
-            match job.id {
-                Some(_) => existing_jobs.push(job),
-                None => new_jobs.push(job),
-            }
-        }
-
-        let new_jobs = Job::save_new(user_id, new_jobs)?;
-        let existing_jobs = Job::update(user_id, existing_jobs)?;
-
-        let mut concat = Vec::with_capacity(new_jobs.len() + existing_jobs.len());
-        concat.extend(new_jobs);
-        concat.extend(existing_jobs);
-
-        Ok(concat)
     }
 
     pub fn delete(self) -> Result<(), Error> {
         match self.id {
             Some(id) => {
-                let connection = database::connection();
+                let connection = database::connection()?;
                 connection.execute("DELETE FROM jobs WHERE id = $1", &[&id])?;
                 Ok(())
             }
@@ -152,7 +116,13 @@ impl Job {
 
     pub fn execute(self) -> Result<(), Error> {
         // TODO: use alpine docker container
-        let args = format!("{}; {}", Secret::get_as_string(self.secrets), self.command);
+        let mut args: String = "".to_owned();
+
+        for secret in self.secrets {
+            args = args + &secret.get_as_string();
+        }
+
+        let args = format!("{}; {}", args, self.command);
         Command::new("sh").arg("-c").arg(args).output()?;
         Ok(())
     }

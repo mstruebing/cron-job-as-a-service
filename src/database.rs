@@ -7,7 +7,7 @@ use crate::secret::Secret;
 use crate::user::User;
 use postgres::{Connection, Error, TlsMode};
 
-pub fn connection() -> Connection {
+pub fn connection() -> Result<Connection, Error> {
     Connection::connect(
         format!(
             "postgres://{}:{}@{}:{}/{}",
@@ -19,17 +19,16 @@ pub fn connection() -> Connection {
         ),
         TlsMode::None,
     )
-    .unwrap()
 }
 
 pub fn reset() -> Result<(), Error> {
-    connection().execute(Secret::drop_table(), &[])?;
-    connection().execute(Job::drop_table(), &[])?;
-    connection().execute(User::drop_table(), &[])?;
+    connection()?.execute(Secret::drop_table(), &[])?;
+    connection()?.execute(Job::drop_table(), &[])?;
+    connection()?.execute(User::drop_table(), &[])?;
 
-    connection().execute(User::create_table(), &[])?;
-    connection().execute(Job::create_table(), &[])?;
-    connection().execute(Secret::create_table(), &[])?;
+    connection()?.execute(User::create_table(), &[])?;
+    connection()?.execute(Job::create_table(), &[])?;
+    connection()?.execute(Secret::create_table(), &[])?;
 
     Ok(())
 }

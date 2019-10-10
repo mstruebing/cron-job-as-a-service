@@ -31,18 +31,19 @@ impl User {
         self
     }
 
-    pub fn remove_job(self, job: Job) -> Self {
-        let mut new_jobs = Vec::with_capacity(self.jobs.len());
+    pub fn remove_job(mut self, job: Job) -> Result<Self, Error> {
+        let mut new_jobs: Vec<Job> = Vec::with_capacity(self.jobs.len() - 1);
 
-        for j in &self.jobs {
-            if job.id.unwrap() == j.id.unwrap() {
-                continue;
+        for j in self.jobs {
+            if job.id.unwrap() != j.id.unwrap() {
+                new_jobs.push(j);
+            } else {
+                j.delete()?;
             }
-
-            new_jobs.push(j);
         }
 
-        self
+        self.jobs = new_jobs;
+        Ok(self)
     }
 
     pub fn drop_table() -> &'static str {
@@ -58,7 +59,7 @@ impl User {
     }
 
     pub fn save_new(mut self) -> Result<User, Error> {
-        let connection = database::connection();
+        let connection = database::connection()?;
 
         for row in &connection.query(
             "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id;",
@@ -68,18 +69,22 @@ impl User {
             self.id = Some(id);
         }
 
-        self.jobs = Job::save(self.id.unwrap(), self.jobs)?;
+        for (index, job) in self.jobs.clone().iter().enumerate() {
+            self.jobs[index] = job.clone().save(self.id.unwrap())?;
+        }
 
         Ok(self)
     }
 
     pub fn update(mut self) -> Result<User, Error> {
-        let connection = database::connection();
+        let connection = database::connection()?;
 
         let query = "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;";
         connection.execute(query, &[&self.email, &self.password, &self.id.unwrap()])?;
 
-        self.jobs = Job::save(self.id.unwrap(), self.jobs)?;
+        for (index, job) in self.jobs.clone().iter().enumerate() {
+            self.jobs[index] = job.clone().save(self.id.unwrap())?;
+        }
 
         Ok(self)
     }
@@ -94,7 +99,7 @@ impl User {
     pub fn delete(self) -> Result<(), Error> {
         match self.id {
             Some(id) => {
-                let connection = database::connection();
+                let connection = database::connection()?;
                 connection.execute("DELETE FROM users WHERE id = $1", &[&id])?;
                 Ok(())
             }
@@ -128,20 +133,10 @@ mod tests {
         let email = "someone@example.com";
         let password = "pa$$word";
 
-        let secrets = vec![Secret::new(None, "hello", "world")];
-        let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets.clone());
-        let jobs = vec![job.clone()];
-        let user = User::new(None, email, password, jobs.clone());
+        let jobs = vec![Job::new(None, "0 * * * *", "echo $hello", 0, 1, vec![])];
+        let user = User::new(None, email, password, jobs);
 
-        let job = Job::new(
-            None,
-            "0 * * * *",
-            "echo $hello Motherfucker",
-            0,
-            1,
-            secrets.clone(),
-        );
-
+        let job = Job::new(None, "0 * * * *", "echo $hello Motherfucker", 0, 1, vec![]);
         let user = user.add_job(job);
 
         assert_eq!(user.jobs.len(), 2);

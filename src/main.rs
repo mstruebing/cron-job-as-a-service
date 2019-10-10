@@ -55,9 +55,9 @@ pub fn reset_db() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn save_user() -> Result<(), Error> {
-    create_user(None).save()?;
-    Ok(())
+pub fn save_user() -> Result<user::User, Error> {
+    let user = create_user(None).save()?;
+    Ok(user)
 }
 
 pub fn delete_user(id: Option<i32>) -> Result<(), Error> {
@@ -93,14 +93,14 @@ pub fn update_secret(id: Option<i32>) -> Result<(), Error> {
     let mut secret = create_secret(id);
     secret.key = "CHANGED";
     secret.value = "SECRET";
-    secret::Secret::save(id.unwrap(), &[secret])?;
+    secret.save(id.unwrap())?;
     Ok(())
 }
 
 pub fn update_job(id: Option<i32>) -> Result<(), Error> {
     let mut job = create_job(id);
     job.command = "CHANGED COMMAND";
-    job::Job::update(id.unwrap(), vec![job])?;
+    job.update(id.unwrap())?;
 
     Ok(())
 }

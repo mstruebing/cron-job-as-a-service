@@ -22,13 +22,14 @@ pub fn connection() -> Result<Connection, Error> {
 }
 
 pub fn reset() -> Result<(), Error> {
-    connection()?.execute(Secret::drop_table(), &[])?;
-    connection()?.execute(Job::drop_table(), &[])?;
-    connection()?.execute(User::drop_table(), &[])?;
+    let connection = connection()?;
+    connection.execute(Secret::drop_table(), &[])?;
+    connection.execute(Job::drop_table(), &[])?;
+    connection.execute(User::drop_table(), &[])?;
 
-    connection()?.execute(User::create_table(), &[])?;
-    connection()?.execute(Job::create_table(), &[])?;
-    connection()?.execute(Secret::create_table(), &[])?;
+    connection.execute(User::create_table(), &[])?;
+    connection.execute(Job::create_table(), &[])?;
+    connection.execute(Secret::create_table(), &[])?;
 
     Ok(())
 }

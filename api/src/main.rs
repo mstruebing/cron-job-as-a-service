@@ -4,9 +4,9 @@ mod database;
 mod job;
 mod secret;
 mod user;
-mod utils;
 
 use postgres::Error;
+use shared::utils;
 
 // Contains nonsense currently, just to test these funcs :)
 fn main() -> Result<(), Error> {

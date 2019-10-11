@@ -28,20 +28,20 @@ pub fn get_next_run(schedule: &str) -> i32 {
 // sec   min    hour   day of month    month of year   day of week   year
 //                                  to
 //       min    hour   day of month    month of year   day of week
-// pub fn transform_to_original_cron_format(schedule: &str) -> String {
-//     let schedule_parts: Vec<&str> = schedule.split(' ').collect();
-//     let mut transformed = "".to_owned();
+pub fn transform_to_original_cron_format(schedule: &str) -> String {
+    let schedule_parts: Vec<&str> = schedule.split(' ').collect();
+    let mut transformed = "".to_owned();
 
-//     for (index, schedule_part) in schedule_parts.iter().enumerate() {
-//         if index == 0 || index == schedule_parts.len() - 1 {
-//             continue;
-//         }
+    for (index, schedule_part) in schedule_parts.iter().enumerate() {
+        if index == 0 || index == schedule_parts.len() - 1 {
+            continue;
+        }
 
-//         transformed.push_str(schedule_part);
-//     }
+        transformed.push_str(schedule_part);
+    }
 
-//     transformed
-// }
+    transformed
+}
 
 //       min    hour   day of month    month of year   day of week
 //                                  to

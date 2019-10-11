@@ -45,7 +45,12 @@ fn main() -> Result<(), Error> {
         0,
         vec![create_secret(None)],
     );
-    job.execute()?;
+
+    job.run()?;
+
+    println!("{}, ", utils::get_next_run("* * * * *"));
+
+    save_user()?;
 
     Ok(())
 }
@@ -78,7 +83,7 @@ pub fn create_job(id: Option<i32>) -> job::Job {
     job::Job::new(
         id,
         "0 * * * *",
-        "echo $hello",
+        "echo hello $hello > world.txt",
         utils::get_current_timestamp(),
         utils::get_current_timestamp() + 1,
         vec![create_secret(None)],

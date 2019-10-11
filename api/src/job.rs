@@ -114,7 +114,7 @@ impl Job {
         }
     }
 
-    pub fn execute(self) -> Result<(), Error> {
+    pub fn run(self) -> Result<(), Error> {
         // TODO: use alpine docker container
         let mut args: String = "".to_owned();
 

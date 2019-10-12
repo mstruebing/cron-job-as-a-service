@@ -6,8 +6,27 @@ pub struct Secret {
 }
 
 impl Secret {
-    pub fn new(id: Option<i32>, key: &'static str, value: &'static str) -> Self {
-        Secret { id, key, value }
+    pub fn new() -> Self {
+        Secret {
+            id: None,
+            key: "",
+            value: "",
+        }
+    }
+
+    pub fn id(mut self, id: Option<i32>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn key(mut self, key: &'static str) -> Self {
+        self.key = key;
+        self
+    }
+
+    pub fn value(mut self, value: &'static str) -> Self {
+        self.value = value;
+        self
     }
 
     pub fn get_as_string(self) -> String {
@@ -20,15 +39,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new() {
-        let secret = Secret::new(None, "hello", "world");
+    fn test() {
+        let secret = Secret::new();
+
+        assert_eq!(secret.id, None);
+        assert_eq!(secret.key, "");
+        assert_eq!(secret.value, "");
+
+        let secret = secret.id(Some(2));
+        assert_eq!(secret.id, Some(2));
+        assert_eq!(secret.key, "");
+        assert_eq!(secret.value, "");
+
+        let secret = secret.key("hello");
+        assert_eq!(secret.id, Some(2));
+        assert_eq!(secret.key, "hello");
+        assert_eq!(secret.value, "");
+
+        let secret = secret.value("world");
+        assert_eq!(secret.id, Some(2));
         assert_eq!(secret.key, "hello");
         assert_eq!(secret.value, "world");
-    }
-
-    #[test]
-    fn test_get_as_string() {
-        let secret = Secret::new(None, "hello", "world");
-        assert_eq!(secret.get_as_string(), "hello=world");
     }
 }

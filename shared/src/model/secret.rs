@@ -61,4 +61,10 @@ mod tests {
         assert_eq!(secret.key, "hello");
         assert_eq!(secret.value, "world");
     }
+
+    #[test]
+    fn get_as_string() {
+        let secret = Secret::new().key("hello").value("world");
+        assert_eq!(secret.get_as_string(), "hello=world");
+    }
 }

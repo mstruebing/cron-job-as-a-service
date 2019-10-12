@@ -119,6 +119,36 @@ mod tests {
         assert_eq!(job.next_run, 2);
         assert_eq!(job.secrets, vec![]);
 
-        // TODO: Add/Remove secrets
+        let job = job.secrets(vec![
+            Secret::new(None, "hello", "world"),
+            Secret::new(Some(1), "goodbye", "moon"),
+        ]);
+        assert_eq!(job.id, Some(3));
+        assert_eq!(job.schedule, "abc");
+        assert_eq!(job.command, "def");
+        assert_eq!(job.last_run, 1);
+        assert_eq!(job.next_run, 2);
+        assert_eq!(job.secrets.len(), 2);
+        assert_eq!(job.secrets[0], Secret::new(None, "hello", "world"));
+        assert_eq!(job.secrets[1], Secret::new(Some(1), "goodbye", "moon"));
+
+        let job = job.remove_secret(Secret::new(None, "hello", "world"));
+        assert_eq!(job.id, Some(3));
+        assert_eq!(job.schedule, "abc");
+        assert_eq!(job.command, "def");
+        assert_eq!(job.last_run, 1);
+        assert_eq!(job.next_run, 2);
+        assert_eq!(job.secrets.len(), 1);
+        assert_eq!(job.secrets[0], Secret::new(Some(1), "goodbye", "moon"));
+
+        let job = job.add_secret(Secret::new(None, "hello", "world"));
+        assert_eq!(job.id, Some(3));
+        assert_eq!(job.schedule, "abc");
+        assert_eq!(job.command, "def");
+        assert_eq!(job.last_run, 1);
+        assert_eq!(job.next_run, 2);
+        assert_eq!(job.secrets.len(), 2);
+        assert_eq!(job.secrets[0], Secret::new(Some(1), "goodbye", "moon"));
+        assert_eq!(job.secrets[1], Secret::new(None, "hello", "world"));
     }
 }

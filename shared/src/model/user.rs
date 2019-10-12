@@ -9,22 +9,43 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(
-        id: Option<i32>,
-        email: &'static str,
-        password: &'static str,
-        jobs: Vec<Job>,
-    ) -> Self {
+    pub fn new() -> Self {
         User {
-            id,
-            email,
-            password,
-            jobs,
+            id: None,
+            email: "",
+            password: "",
+            jobs: vec![],
         }
+    }
+
+    pub fn id(mut self, id: Option<i32>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn email(mut self, email: &'static str) -> Self {
+        self.email = email;
+        self
+    }
+
+    pub fn password(mut self, password: &'static str) -> Self {
+        self.password = password;
+        self
+    }
+
+    pub fn jobs(mut self, jobs: Vec<Job>) -> Self {
+        self.jobs = jobs;
+        self
     }
 
     pub fn add_job(mut self, job: Job) -> Self {
         self.jobs.push(job);
+        self
+    }
+
+    pub fn remove_job(mut self, job: Job) -> Self {
+        let index = self.jobs.iter().position(|x| *x == job).unwrap();
+        self.jobs.remove(index);
         self
     }
 }
@@ -32,36 +53,55 @@ impl User {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::secret::Secret;
 
     #[test]
-    fn test_new() {
-        let email = "someone@example.com";
-        let password = "pa$$word";
+    fn test() {
+        let user = User::new();
+        assert_eq!(user.id, None);
+        assert_eq!(user.email, "");
+        assert_eq!(user.password, "");
+        assert_eq!(user.jobs, vec![]);
 
-        let secrets = vec![Secret::new(None, "hello", "world")];
-        let job = Job::new(None, "0 * * * *", "echo $hello", 0, 1, secrets);
-        let jobs = vec![job.clone()];
-        let user = User::new(None, email, password, jobs);
+        let user = user.id(Some(3));
+        assert_eq!(user.id, Some(3));
+        assert_eq!(user.email, "");
+        assert_eq!(user.password, "");
+        assert_eq!(user.jobs, vec![]);
 
-        assert_eq!(user.email, email);
-        assert_eq!(user.password, password);
-        assert_eq!(user.jobs, vec![job]);
-    }
+        let user = user.email("someone@example.com");
+        assert_eq!(user.id, Some(3));
+        assert_eq!(user.email, "someone@example.com");
+        assert_eq!(user.password, "");
+        assert_eq!(user.jobs, vec![]);
 
-    #[test]
-    fn test_add_job() {
-        let email = "someone@example.com";
-        let password = "pa$$word";
+        let user = user.password("pa$$");
+        assert_eq!(user.id, Some(3));
+        assert_eq!(user.email, "someone@example.com");
+        assert_eq!(user.password, "pa$$");
+        assert_eq!(user.jobs, vec![]);
 
-        let jobs = vec![Job::new(None, "0 * * * *", "echo $hello", 0, 1, vec![])];
-        let user = User::new(None, email, password, jobs);
-
-        let job = Job::new(None, "0 * * * *", "echo $hello Motherfucker", 0, 1, vec![]);
-        let user = user.add_job(job);
-
+        let user = user.jobs(vec![Job::new().id(None), Job::new().id(Some(1))]);
+        assert_eq!(user.id, Some(3));
+        assert_eq!(user.email, "someone@example.com");
+        assert_eq!(user.password, "pa$$");
         assert_eq!(user.jobs.len(), 2);
-        assert_eq!(user.jobs[0].command, "echo $hello");
-        assert_eq!(user.jobs[1].command, "echo $hello Motherfucker");
+        assert_eq!(user.jobs[0], Job::new().id(None));
+        assert_eq!(user.jobs[1], Job::new().id(Some(1)));
+
+        let user = user.remove_job(Job::new().id(None));
+        assert_eq!(user.id, Some(3));
+        assert_eq!(user.email, "someone@example.com");
+        assert_eq!(user.password, "pa$$");
+        assert_eq!(user.jobs.len(), 1);
+        assert_eq!(user.jobs[0], Job::new().id(Some(1)));
+
+        let user = user.add(Job::new().id(None));
+        assert_eq!(user.id, Some(3));
+        assert_eq!(user.email, "someone@example.com");
+        assert_eq!(user.password, "pa$$");
+        assert_eq!(user.jobs.len(), 2);
+        assert_eq!(user.jobs[0], Job::new().id(Some(1)));
+        assert_eq!(user.jobs[1], Job::new().id(None));
     }
+
 }

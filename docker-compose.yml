@@ -9,4 +9,4 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: cronjob_as_a_service
     volumes:
-     - ${PWD}/db:/var/lib/postgresql/data
+     - ${PWD}/.data/db:/var/lib/postgresql/data

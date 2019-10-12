@@ -111,5 +111,4 @@ mod tests {
         assert_eq!(user.jobs[0], Job::new().id(Some(1)));
         assert_eq!(user.jobs[1], Job::new().id(None));
     }
-
 }

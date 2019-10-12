@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Secret {
     pub id: Option<i32>,
     pub key: &'static str,
@@ -7,11 +7,7 @@ pub struct Secret {
 
 impl Secret {
     pub fn new() -> Self {
-        Secret {
-            id: None,
-            key: "",
-            value: "",
-        }
+        Secret::default()
     }
 
     pub fn id(mut self, id: Option<i32>) -> Self {

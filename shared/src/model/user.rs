@@ -1,6 +1,6 @@
 use crate::model::job::Job;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default)]
 pub struct User {
     pub id: Option<i32>,
     pub email: &'static str,
@@ -10,12 +10,7 @@ pub struct User {
 
 impl User {
     pub fn new() -> Self {
-        User {
-            id: None,
-            email: "",
-            password: "",
-            jobs: vec![],
-        }
+        User::default()
     }
 
     pub fn id(mut self, id: Option<i32>) -> Self {

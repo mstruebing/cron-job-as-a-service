@@ -1,6 +1,6 @@
 use crate::model::secret::Secret;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Job {
     pub id: Option<i32>,
     pub schedule: &'static str,
@@ -12,14 +12,7 @@ pub struct Job {
 
 impl Job {
     pub fn new() -> Self {
-        Job {
-            id: None,
-            schedule: "",
-            command: "",
-            last_run: 0,
-            next_run: 0,
-            secrets: vec![],
-        }
+        Job::default()
     }
 
     pub fn id(mut self, id: Option<i32>) -> Self {

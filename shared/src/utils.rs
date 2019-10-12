@@ -1,10 +1,10 @@
-extern crate chrono;
-extern crate cron;
-
-use chrono::Utc;
-use cron::Schedule;
+// stdlib
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+// modules
+use chrono::Utc;
+use cron::Schedule;
 
 pub fn get_current_timestamp() -> i32 {
     let start = SystemTime::now();

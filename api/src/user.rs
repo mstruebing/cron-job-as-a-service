@@ -1,10 +1,12 @@
-use postgres::Error;
-
-use crate::job;
+// own modules
 use shared::database;
+use shared::error::Result;
 use shared::model::user::User;
 
-pub fn delete(user: User) -> Result<(), Error> {
+// internal
+use crate::job;
+
+pub fn delete(user: User) -> Result<()> {
     match user.id {
         Some(id) => {
             let connection = database::connection()?;
@@ -15,7 +17,7 @@ pub fn delete(user: User) -> Result<(), Error> {
     }
 }
 
-pub fn save(mut user: User) -> Result<User, Error> {
+pub fn save(mut user: User) -> Result<User> {
     let connection = database::connection()?;
 
     for row in &connection.query(
@@ -33,7 +35,7 @@ pub fn save(mut user: User) -> Result<User, Error> {
     Ok(user)
 }
 
-pub fn update(mut user: User) -> Result<User, Error> {
+pub fn update(mut user: User) -> Result<User> {
     let connection = database::connection()?;
 
     let query = "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;";

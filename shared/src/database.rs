@@ -1,15 +1,18 @@
-use dotenv::dotenv;
-
+// stdlib
 use std::env;
 
-use crate::error::Result;
+// modules
+use dotenv::dotenv;
+use postgres::{Connection, TlsMode};
+
+// internal
+use crate::error::{Error, Result};
 use crate::model::job::Job;
 use crate::model::secret::Secret;
 use crate::model::user::User;
-use postgres::{Connection, TlsMode};
 
 pub fn connection() -> Result<Connection> {
-    dotenv().ok()?;
+    dotenv()?;
     Connection::connect(
         format!(
             "postgres://{}:{}@{}:{}/{}",
@@ -21,6 +24,7 @@ pub fn connection() -> Result<Connection> {
         ),
         TlsMode::None,
     )
+    .map_err(Error::Postgres)
 }
 
 pub fn reset() -> Result<()> {

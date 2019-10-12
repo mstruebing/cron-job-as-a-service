@@ -1,10 +1,12 @@
-use postgres::Error;
-
-use crate::secret;
+// own modules
 use shared::database;
+use shared::error::Result;
 use shared::model::job::Job;
 
-pub fn save(mut job: Job, user_id: i32) -> Result<Job, Error> {
+// internal
+use crate::secret;
+
+pub fn save(mut job: Job, user_id: i32) -> Result<Job> {
     let connection = database::connection()?;
     let query =
             "INSERT INTO jobs (user_id, schedule, command, last_run, next_run) VALUES ($1, $2, $3, $4, $5) RETURNING id;";
@@ -31,7 +33,7 @@ pub fn save(mut job: Job, user_id: i32) -> Result<Job, Error> {
     Ok(job)
 }
 
-pub fn update(mut job: Job, user_id: i32) -> Result<Job, Error> {
+pub fn update(mut job: Job, user_id: i32) -> Result<Job> {
     let connection = database::connection()?;
     let query = "UPDATE jobs SET user_id = $1, schedule = $2, command = $3, last_run = $4, next_run = $5 WHERE id = $6;";
     connection.execute(
@@ -53,7 +55,7 @@ pub fn update(mut job: Job, user_id: i32) -> Result<Job, Error> {
     Ok(job)
 }
 
-pub fn delete(job: Job) -> Result<(), Error> {
+pub fn delete(job: Job) -> Result<()> {
     match job.id {
         Some(id) => {
             let connection = database::connection()?;

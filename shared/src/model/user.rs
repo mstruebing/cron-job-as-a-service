@@ -1,3 +1,4 @@
+// internal
 use crate::model::job::Job;
 
 #[derive(Debug, Default)]

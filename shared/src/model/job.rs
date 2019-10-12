@@ -1,3 +1,4 @@
+// internal
 use crate::model::secret::Secret;
 
 #[derive(Clone, Debug, Default, PartialEq)]

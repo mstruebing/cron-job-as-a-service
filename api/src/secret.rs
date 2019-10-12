@@ -1,9 +1,9 @@
-use postgres::Error;
-
+// own modules
 use shared::database;
+use shared::error::Result;
 use shared::model::secret::Secret;
 
-pub fn save(mut secret: Secret, job_id: i32) -> Result<Secret, Error> {
+pub fn save(mut secret: Secret, job_id: i32) -> Result<Secret> {
     let connection = database::connection()?;
     let query = "INSERT INTO secrets (job_id, key, value) VALUES ($1, $2, $3) RETURNING id";
     let rows = connection.query(query, &[&job_id, &secret.key, &secret.value])?;
@@ -16,7 +16,7 @@ pub fn save(mut secret: Secret, job_id: i32) -> Result<Secret, Error> {
     Ok(secret)
 }
 
-pub fn update(secret: Secret, job_id: i32) -> Result<Secret, Error> {
+pub fn update(secret: Secret, job_id: i32) -> Result<Secret> {
     let connection = database::connection()?;
 
     let query = "UPDATE secrets SET job_id = $1, key = $2, value = $3 WHERE id = $4;";
@@ -28,7 +28,7 @@ pub fn update(secret: Secret, job_id: i32) -> Result<Secret, Error> {
     Ok(secret)
 }
 
-pub fn delete(secret: Secret) -> Result<(), Error> {
+pub fn delete(secret: Secret) -> Result<()> {
     match secret.id {
         Some(id) => {
             let connection = database::connection()?;

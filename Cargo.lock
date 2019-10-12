@@ -79,7 +79,6 @@ dependencies = [
 name = "cass-api"
 version = "0.1.0"
 dependencies = [
- "postgres 0.15.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "shared 0.1.0",
 ]
 
@@ -87,8 +86,6 @@ dependencies = [
 name = "cass-runner"
 version = "0.1.0"
 dependencies = [
- "dotenv 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "postgres 0.15.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "shared 0.1.0",
 ]
 

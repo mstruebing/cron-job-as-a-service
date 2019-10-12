@@ -1,13 +1,13 @@
 use crate::model::secret::Secret;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Job {
     pub id: Option<i32>,
     pub schedule: &'static str,
     pub command: &'static str,
     pub last_run: i32,
     pub next_run: i32,
-    secrets: Vec<Secret>,
+    pub secrets: Vec<Secret>,
 }
 
 impl Job {
@@ -54,6 +54,20 @@ impl Job {
         let index = self.secrets.iter().position(|x| *x == secret).unwrap();
         self.secrets.remove(index);
         self
+    }
+
+    pub fn drop_table_query() -> &'static str {
+        "DROP TABLE IF EXISTS jobs;"
+    }
+    pub fn create_table_query() -> &'static str {
+        "CREATE TABLE jobs (
+            id SERIAL PRIMARY KEY NOT NULL,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL ,
+            schedule TEXT NOT NULL,
+            command TEXT NOT NULL,
+            last_run INTEGER,
+            next_run INTEGER NOT NULL
+            );"
     }
 }
 

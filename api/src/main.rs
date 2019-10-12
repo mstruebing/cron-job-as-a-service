@@ -1,119 +1,41 @@
-use dotenv;
+// external modules
+use postgres::Error;
 
-mod database;
+// Own modules
+use shared::database;
+use shared::model::job::Job;
+use shared::model::secret::Secret;
+use shared::model::user::User;
+
+// internal
 mod job;
 mod secret;
 mod user;
 
-use postgres::Error;
-use shared::utils;
-
 // Contains nonsense currently, just to test these funcs :)
 fn main() -> Result<(), Error> {
-    dotenv::dotenv().ok();
-    reset_db()?;
-
-    // test save
-    save_user()?;
-    delete_user(Some(1))?;
-
-    // prepare test delete
-    save_user()?;
-    let secret = create_secret(Some(2));
-    let job = create_job(Some(2));
-
-    // test delete
-    secret.delete()?;
-    job.delete()?;
-    delete_user(Some(2))?;
-
-    // test update
-    save_user()?;
-    update_secret(Some(3))?;
-    update_job(Some(3))?;
-    update_user(Some(3))?;
-
-    // Cleanup
-    delete_user(Some(3))?;
-
-    // Test job execution
-    let job = job::Job::new(
-        None,
-        "",
-        "echo hello $hello > world.txt",
-        0,
-        0,
-        vec![create_secret(None)],
-    );
-
-    job.run()?;
-
-    println!("{}, ", utils::get_next_run("* * * * *"));
-
-    save_user()?;
-
-    Ok(())
-}
-
-pub fn reset_db() -> Result<(), Error> {
     database::reset()?;
-    Ok(())
-}
+    let user = User::new();
+    let user = user::save(user)?;
 
-pub fn save_user() -> Result<user::User, Error> {
-    let user = create_user(None).save()?;
-    Ok(user)
-}
+    let job = Job::new();
+    let job = job::save(job, user.id.unwrap())?;
 
-pub fn delete_user(id: Option<i32>) -> Result<(), Error> {
-    create_user(id).delete()?;
-    Ok(())
-}
+    let secret = Secret::new();
+    secret::save(secret.clone(), job.id.unwrap())?;
 
-pub fn create_user(id: Option<i32>) -> user::User {
-    user::User::new(
-        id,
-        "someone@example.com",
-        "abcdefg1",
-        vec![create_job(None)],
-    )
-}
+    let user = user.email("someone@example.com");
+    let user = user::update(user)?;
 
-pub fn create_job(id: Option<i32>) -> job::Job {
-    job::Job::new(
-        id,
-        "0 * * * *",
-        "echo hello $hello > world.txt",
-        utils::get_current_timestamp(),
-        utils::get_current_timestamp() + 1,
-        vec![create_secret(None)],
-    )
-}
+    let job = job.command("echo hello");
+    job::update(job.clone(), user.id.unwrap())?;
 
-pub fn create_secret(id: Option<i32>) -> secret::Secret {
-    secret::Secret::new(id, "hello", "world")
-}
+    let secret = secret.key("hello").value("world");
+    secret::update(secret.clone(), job.id.unwrap())?;
 
-pub fn update_secret(id: Option<i32>) -> Result<(), Error> {
-    let mut secret = create_secret(id);
-    secret.key = "CHANGED";
-    secret.value = "SECRET";
-    secret.save(id.unwrap())?;
-    Ok(())
-}
-
-pub fn update_job(id: Option<i32>) -> Result<(), Error> {
-    let mut job = create_job(id);
-    job.command = "CHANGED COMMAND";
-    job.update(id.unwrap())?;
-
-    Ok(())
-}
-
-pub fn update_user(id: Option<i32>) -> Result<(), Error> {
-    let mut user = create_user(id);
-    user.email = "changed@mail.com";
-    user.save()?;
+    secret::delete(secret)?;
+    job::delete(job)?;
+    user::delete(user)?;
 
     Ok(())
 }

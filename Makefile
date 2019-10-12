@@ -1,3 +1,5 @@
+all: lint test build run
+
 build:
 	cargo build
 

@@ -38,25 +38,35 @@ pub fn run(job: Job) -> Result<()> {
 
 // TODO: Add limit
 // TOOD: Get complete job
-// TODO: Get command
 fn get_next_jobs() -> Result<Vec<Job>> {
     let connection = database::connection()?;
     let mut jobs = vec![];
 
     for row in &connection.query(
-        "SELECT id, command, command FROM jobs WHERE next_run > $1 ORDER BY next_run",
+        "SELECT id, command, next_run, schedule FROM jobs WHERE jobs.next_run > $1 ORDER BY jobs.next_run;",
         &[&utils::get_current_timestamp()],
     )? {
-        println!("{:?}", row);
-        let id: Option<i32> = Some(row.get(0));
+        let job = utils::convert_row_to_job(row).to_owned();
+        let job = job.clone().secrets(get_secrets_for_job(&job)?);
 
-        jobs.push(
-            Job::new()
-                .id(id)
-                .command("echo $(date +%s) $hello >> world.txt")
-                .secrets(vec![Secret::new().key("hello").value("world")]),
-        );
+        jobs.push(job);
     }
 
+    println!("Jobs: {:?}", jobs);
     Ok(jobs)
+}
+
+fn get_secrets_for_job(job: &Job) -> Result<Vec<Secret>> {
+    let connection = database::connection()?;
+    let mut secrets = vec![];
+
+    for row in &connection.query(
+        "SELECT id, key, value FROM secrets WHERE job_id = $1",
+        &[&job.id.unwrap()],
+    )? {
+        secrets.push(utils::convert_row_to_secret(row));
+    }
+
+    println!("Secrets: {:?}", secrets);
+    Ok(secrets)
 }

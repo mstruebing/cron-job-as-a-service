@@ -5,6 +5,11 @@ use std::time;
 // modules
 use chrono::Utc;
 use cron::Schedule;
+use postgres::rows::Row;
+
+// internal
+use crate::model::job::Job;
+use crate::model::secret::Secret;
 
 pub fn get_current_timestamp() -> i32 {
     let start = time::SystemTime::now();
@@ -51,4 +56,24 @@ pub fn transform_to_modified_cron_format(schedule: &str) -> String {
     transformed.push_str(schedule);
     transformed.push_str(" *");
     transformed
+}
+
+pub fn convert_row_to_job(row: Row) -> Job {
+    let id: Option<i32> = Some(row.get("id"));
+    let command: String = row.get("command");
+    let schedule: String = row.get("schedule");
+    let next_run: i32 = row.get("next_run");
+    Job::new()
+        .id(id)
+        .command(&command)
+        .next_run(next_run)
+        .schedule(&schedule)
+}
+
+pub fn convert_row_to_secret(row: Row) -> Secret {
+    let key: String = row.get("key");
+    let value: String = row.get("value");
+    let id: Option<i32> = Some(row.get("id"));
+
+    Secret::new().id(id).key(&key).value(&value)
 }

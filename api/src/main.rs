@@ -47,13 +47,15 @@ fn test_save_delete() -> Result<()> {
 }
 
 fn save_something_for_worker() -> Result<()> {
-    let secrets = vec![Secret::new().key("hello").value("world")];
     let jobs = vec![Job::new()
         .schedule("* * * * * ")
-        .command("echo $hello >> output.txt")
+        .command("echo $(date +%s) $hello >> world.txt")
         .last_run(0)
         .next_run(utils::get_current_timestamp() + 1000)
-        .secrets(secrets)];
+        .secrets(vec![
+            Secret::new().key("hello").value("world"),
+            Secret::new().key("world").value("hello"),
+        ])];
     let user = User::new()
         .email("someone@example.com")
         .password("pass")

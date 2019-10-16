@@ -25,10 +25,10 @@ pub fn run(job: Job) -> Result<()> {
         args = args + &secret.get_as_string();
     }
 
-    if job.secrets.len() > 0 {
+    if !job.secrets.is_empty() {
         args = format!("{}; {}", args, job.command);
     } else {
-        args = format!("{}", job.command);
+        args = job.command.to_string();
     }
 
     Command::new("sh").arg("-c").arg(args).spawn()?;
@@ -47,6 +47,7 @@ fn get_next_jobs() -> Result<Vec<Job>> {
         "SELECT id, command, command FROM jobs WHERE next_run > $1 ORDER BY next_run",
         &[&utils::get_current_timestamp()],
     )? {
+        println!("{:?}", row);
         let id: Option<i32> = Some(row.get(0));
 
         jobs.push(

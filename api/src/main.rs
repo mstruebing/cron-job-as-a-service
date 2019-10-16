@@ -4,6 +4,7 @@ use shared::error::Result;
 use shared::model::job::Job;
 use shared::model::secret::Secret;
 use shared::model::user::User;
+use shared::utils;
 
 // internal
 mod job;
@@ -12,6 +13,13 @@ mod user;
 
 // Contains nonsense currently, just to test these funcs :)
 fn main() -> Result<()> {
+    test_save_delete()?;
+    save_something_for_worker()?;
+
+    Ok(())
+}
+
+fn test_save_delete() -> Result<()> {
     database::reset()?;
     let user = User::new();
     let user = user::save(user)?;
@@ -34,6 +42,24 @@ fn main() -> Result<()> {
     secret::delete(secret)?;
     job::delete(job)?;
     user::delete(user)?;
+
+    Ok(())
+}
+
+fn save_something_for_worker() -> Result<()> {
+    let secrets = vec![Secret::new().key("hello").value("world")];
+    let jobs = vec![Job::new()
+        .schedule("* * * * * ")
+        .command("echo $hello >> output.txt")
+        .last_run(0)
+        .next_run(utils::get_current_timestamp() + 1000)
+        .secrets(secrets)];
+    let user = User::new()
+        .email("someone@example.com")
+        .password("pass")
+        .jobs(jobs);
+
+    user::save(user)?;
 
     Ok(())
 }

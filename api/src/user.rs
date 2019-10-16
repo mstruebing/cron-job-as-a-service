@@ -21,7 +21,9 @@ pub fn save(mut user: User) -> Result<User> {
     let connection = database::connection()?;
 
     for row in &connection.query(
-        "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id;",
+        "INSERT INTO users (email, password)
+        VALUES ($1, $2)
+        RETURNING id;",
         &[&user.email, &user.password],
     )? {
         let id: i32 = row.get(0);
@@ -38,8 +40,10 @@ pub fn save(mut user: User) -> Result<User> {
 pub fn update(mut user: User) -> Result<User> {
     let connection = database::connection()?;
 
-    let query = "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;";
-    connection.execute(query, &[&user.email, &user.password, &user.id.unwrap()])?;
+    connection.execute(
+        "UPDATE users SET (email, password) = ($1, $2) WHERE id = $3;",
+        &[&user.email, &user.password, &user.id.unwrap()],
+    )?;
 
     for (index, job) in user.jobs.clone().iter().enumerate() {
         user.jobs[index] = job::save(job.clone(), user.id.unwrap())?;

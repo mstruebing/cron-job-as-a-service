@@ -63,10 +63,13 @@ pub fn convert_row_to_job(row: Row) -> Job {
     let command: String = row.get("command");
     let schedule: String = row.get("schedule");
     let next_run: i32 = row.get("next_run");
+    let last_run: i32 = row.get("last_run");
+
     Job::new()
         .id(id)
         .command(&command)
         .next_run(next_run)
+        .last_run(last_run)
         .schedule(&schedule)
 }
 

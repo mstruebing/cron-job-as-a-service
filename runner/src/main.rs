@@ -82,7 +82,7 @@ fn get_next_jobs() -> Result<Vec<Job>> {
         ORDER BY jobs.next_run;",
         &[&utils::get_current_timestamp()],
     )? {
-        let job = utils::convert_row_to_job(row).to_owned();
+        let job = utils::convert_row_to_job(row);
         let secrets = utils::get_secrets_for_job(&job)?;
         let job = job.secrets(secrets);
 

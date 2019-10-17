@@ -49,23 +49,22 @@ fn main() {
 }
 
 pub fn run(job: Job) -> Result<Job> {
-    let mut args: String = "".to_owned();
-
-    for secret in job.secrets.clone() {
-        args = args + " " + &secret.get_as_string();
-    }
-
-    if !job.secrets.is_empty() {
-        args = format!("{}; {}", args, job.command);
+    let args = if !job.secrets.is_empty() {
+        let args = job
+            .secrets
+            .iter()
+            .fold(String::new(), |acc, next| acc + " " + &next.get_as_string());
+        format!("{}; {}", args, job.command)
     } else {
-        args = job.command.to_string();
-    }
+        job.command.to_string()
+    };
 
     debug(&format!("job: {}, command: {}", job.id.unwrap(), args));
     Command::new("sh").arg("-c").arg(args).spawn()?;
 
     let job = job.last_run(utils::get_current_timestamp());
-    let job = job.clone().next_run(utils::get_next_run(&job.schedule));
+    let next_run = utils::get_next_run(&job.schedule);
+    let job = job.next_run(next_run);
     let job = job::update(job)?;
 
     Ok(job)
@@ -84,7 +83,8 @@ fn get_next_jobs() -> Result<Vec<Job>> {
         &[&utils::get_current_timestamp()],
     )? {
         let job = utils::convert_row_to_job(row).to_owned();
-        let job = job.clone().secrets(utils::get_secrets_for_job(&job)?);
+        let secrets = utils::get_secrets_for_job(&job)?;
+        let job = job.secrets(secrets);
 
         jobs.push(job);
     }

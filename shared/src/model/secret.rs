@@ -25,7 +25,7 @@ impl Secret {
         self
     }
 
-    pub fn get_as_string(self) -> String {
+    pub fn get_as_string(&self) -> String {
         format!("{}={}", self.key, self.value)
     }
 

@@ -28,9 +28,14 @@ pub fn save(mut user: User) -> Result<User> {
         user.id = Some(id);
     }
 
-    for (index, job) in user.jobs.clone().iter().enumerate() {
-        user.jobs[index] = job::save(job.clone(), user.id.unwrap())?;
-    }
+    // convert iterator over results to result of an iterator. if a single element in the iterator
+    // is an `Err`, the result will be an `Err`
+    let jobs: Result<Vec<_>, _> = user
+        .jobs
+        .iter()
+        .map(|job| job::save(job.clone(), user.id.unwrap()))
+        .collect();
+    user.jobs = jobs?;
 
     Ok(user)
 }
@@ -43,9 +48,12 @@ pub fn update(mut user: User) -> Result<User> {
         &[&user.email, &user.password, &user.id.unwrap()],
     )?;
 
-    for (index, job) in user.jobs.clone().iter().enumerate() {
-        user.jobs[index] = job::save(job.clone(), user.id.unwrap())?;
-    }
+    let jobs: Result<Vec<_>, _> = user
+        .jobs
+        .iter()
+        .map(|job| job::save(job.clone(), user.id.unwrap()))
+        .collect();
+    user.jobs = jobs?;
 
     Ok(user)
 }

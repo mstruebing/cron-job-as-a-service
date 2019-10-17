@@ -23,9 +23,12 @@ pub fn save(mut job: Job, user_id: i32) -> Result<Job> {
         job.id = Some(id);
     }
 
-    for (index, secret) in job.secrets.clone().iter().enumerate() {
-        job.secrets[index] = secret::save(secret.clone(), job.id.unwrap())?;
-    }
+    let secrets: Result<Vec<_>, _> = job
+        .secrets
+        .iter()
+        .map(|secret| secret::save(secret.clone(), job.id.unwrap()))
+        .collect();
+    job.secrets = secrets?;
 
     Ok(job)
 }
@@ -44,9 +47,12 @@ pub fn update(mut job: Job) -> Result<Job> {
         ],
     )?;
 
-    for (index, secret) in job.secrets.clone().iter().enumerate() {
-        job.secrets[index] = secret::save(secret.clone(), job.id.unwrap())?;
-    }
+    let secrets: Result<Vec<_>, _> = job
+        .secrets
+        .iter()
+        .map(|secret| secret::save(secret.clone(), job.id.unwrap()))
+        .collect();
+    job.secrets = secrets?;
 
     Ok(job)
 }

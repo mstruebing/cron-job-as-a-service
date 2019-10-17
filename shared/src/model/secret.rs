@@ -1,8 +1,8 @@
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Secret {
     pub id: Option<i32>,
-    pub key: &'static str,
-    pub value: &'static str,
+    pub key: String,
+    pub value: String,
 }
 
 impl Secret {
@@ -15,13 +15,13 @@ impl Secret {
         self
     }
 
-    pub fn key(mut self, key: &'static str) -> Self {
-        self.key = key;
+    pub fn key(mut self, key: &str) -> Self {
+        self.key = key.to_string();
         self
     }
 
-    pub fn value(mut self, value: &'static str) -> Self {
-        self.value = value;
+    pub fn value(mut self, value: &str) -> Self {
+        self.value = value.to_string();
         self
     }
 

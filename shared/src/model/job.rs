@@ -4,8 +4,8 @@ use crate::model::secret::Secret;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Job {
     pub id: Option<i32>,
-    pub schedule: &'static str,
-    pub command: &'static str,
+    pub schedule: String,
+    pub command: String,
     pub last_run: i32,
     pub next_run: i32,
     pub secrets: Vec<Secret>,
@@ -21,13 +21,13 @@ impl Job {
         self
     }
 
-    pub fn schedule(mut self, schedule: &'static str) -> Self {
-        self.schedule = schedule;
+    pub fn schedule(mut self, schedule: &str) -> Self {
+        self.schedule = schedule.to_string();
         self
     }
 
-    pub fn command(mut self, command: &'static str) -> Self {
-        self.command = command;
+    pub fn command(mut self, command: &str) -> Self {
+        self.command = command.to_string();
         self
     }
 

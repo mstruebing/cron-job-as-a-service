@@ -4,12 +4,10 @@ use shared::error::Result;
 use shared::model::job::Job;
 use shared::model::secret::Secret;
 use shared::model::user::User;
+use shared::repository::job;
+use shared::repository::secret;
+use shared::repository::user;
 use shared::utils;
-
-// internal
-mod job;
-mod secret;
-mod user;
 
 // Contains nonsense currently, just to test these funcs :)
 fn main() -> Result<()> {
@@ -34,10 +32,10 @@ fn test_save_delete() -> Result<()> {
     let user = user::update(user)?;
 
     let job = job.id(Some(1)).command("echo hello");
-    job::update(job.clone(), user.id.unwrap())?;
+    job::update(job.clone())?;
 
     let secret = secret.id(Some(1)).key("hello").value("world");
-    secret::update(secret.clone(), job.id.unwrap())?;
+    secret::update(secret.clone())?;
 
     secret::delete(secret)?;
     job::delete(job)?;
@@ -47,13 +45,15 @@ fn test_save_delete() -> Result<()> {
 }
 
 fn save_something_for_worker() -> Result<()> {
-    let secrets = vec![Secret::new().key("hello").value("world")];
     let jobs = vec![Job::new()
         .schedule("* * * * * ")
-        .command("echo $hello >> output.txt")
+        .command("echo $(date +%s) $hello >> world.txt")
         .last_run(0)
-        .next_run(utils::get_current_timestamp() + 1000)
-        .secrets(secrets)];
+        .next_run(utils::get_current_timestamp() + 30)
+        .secrets(vec![
+            Secret::new().key("hello").value("world"),
+            Secret::new().key("world").value("hello"),
+        ])];
     let user = User::new()
         .email("someone@example.com")
         .password("pass")

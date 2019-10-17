@@ -51,7 +51,7 @@ fn save_something_for_worker() -> Result<()> {
         .schedule("* * * * * ")
         .command("echo $(date +%s) $hello >> world.txt")
         .last_run(0)
-        .next_run(utils::get_current_timestamp() + 1000)
+        .next_run(utils::get_current_timestamp() + 30)
         .secrets(vec![
             Secret::new().key("hello").value("world"),
             Secret::new().key("world").value("hello"),

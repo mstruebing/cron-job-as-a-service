@@ -8,6 +8,8 @@ use cron::Schedule;
 use postgres::rows::Row;
 
 // internal
+use crate::database;
+use crate::error::Result;
 use crate::model::job::Job;
 use crate::model::secret::Secret;
 
@@ -79,4 +81,20 @@ pub fn convert_row_to_secret(row: Row) -> Secret {
     let id: Option<i32> = Some(row.get("id"));
 
     Secret::new().id(id).key(&key).value(&value)
+}
+
+pub fn get_secrets_for_job(job: &Job) -> Result<Vec<Secret>> {
+    let connection = database::connection()?;
+    let mut secrets = vec![];
+
+    for row in &connection.query(
+        "SELECT id, key, value
+        FROM secrets
+        WHERE job_id = $1",
+        &[&job.id.unwrap()],
+    )? {
+        secrets.push(convert_row_to_secret(row));
+    }
+
+    Ok(secrets)
 }

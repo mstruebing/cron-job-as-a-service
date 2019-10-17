@@ -1,10 +1,8 @@
-// own modules
-use shared::database;
-use shared::error::Result;
-use shared::model::user::User;
-
 // internal
-use crate::job;
+use crate::database;
+use crate::error::Result;
+use crate::model::user::User;
+use crate::repository::job;
 
 pub fn delete(user: User) -> Result<()> {
     match user.id {

@@ -21,11 +21,12 @@ pub fn log(msg: &str) {
 
 pub fn debug(msg: &str) {
     match dotenv() {
-        Ok(_) => match env::var("DEBUG") {
-            Ok(_) => println!("DEBUG: {}", msg),
-            Err(_) => {}
-        },
-        Err(err) => println!("ERROR: {:?}", err),
+        Ok(_) => {
+            if env::var("DEBUG").is_ok() {
+                println!("DEBUG: {}", msg)
+            }
+        }
+        Err(err) => log(&format!("ERROR: {:?}", err)),
     }
 }
 

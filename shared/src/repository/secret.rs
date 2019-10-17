@@ -1,7 +1,7 @@
 // own modules
-use shared::database;
-use shared::error::Result;
-use shared::model::secret::Secret;
+use crate::database;
+use crate::error::Result;
+use crate::model::secret::Secret;
 
 pub fn save(mut secret: Secret, job_id: i32) -> Result<Secret> {
     let connection = database::connection()?;
@@ -18,12 +18,12 @@ pub fn save(mut secret: Secret, job_id: i32) -> Result<Secret> {
     Ok(secret)
 }
 
-pub fn update(secret: Secret, job_id: i32) -> Result<Secret> {
+pub fn update(secret: Secret) -> Result<Secret> {
     let connection = database::connection()?;
 
     connection.execute(
-        "UPDATE secrets SET job_id = $1, key = $2, value = $3 WHERE id = $4;",
-        &[&job_id, &secret.key, &secret.value, &secret.id.unwrap()],
+        "UPDATE secrets SET key = $1, value = $2 WHERE id = 4;",
+        &[&secret.key, &secret.value, &secret.id.unwrap()],
     )?;
 
     Ok(secret)

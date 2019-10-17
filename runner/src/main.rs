@@ -9,6 +9,7 @@ use shared::database;
 use shared::error::Result;
 use shared::logger::{debug, log};
 use shared::model::job::Job;
+use shared::repository::job;
 use shared::utils;
 
 fn main() {
@@ -19,12 +20,13 @@ fn main() {
         chan_select! {
                 tick.recv() => {
                     let jobs = get_next_jobs();
-                    let current_timestamp = utils::get_current_timestamp();
 
                     match jobs {
                         Ok(jobs) => {
                             for job in jobs {
+                                let current_timestamp = utils::get_current_timestamp();
                                 debug(&format!("current_timestamp: {}, next_run: {}, diff: {}", current_timestamp, job.next_run, job.next_run - current_timestamp));
+
                                 if job.next_run == current_timestamp {
                                     let result = run(job);
                                     match result {
@@ -64,7 +66,7 @@ pub fn run(job: Job) -> Result<Job> {
 
     let job = job.last_run(utils::get_current_timestamp());
     let job = job.clone().next_run(utils::get_next_run(&job.schedule));
-    // TODO: Update job
+    let job = job::update(job)?;
 
     Ok(job)
 }

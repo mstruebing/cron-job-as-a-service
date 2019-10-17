@@ -1,10 +1,8 @@
-// own modules
-use shared::database;
-use shared::error::Result;
-use shared::model::job::Job;
-
 // internal
-use crate::secret;
+use crate::database;
+use crate::error::Result;
+use crate::model::job::Job;
+use crate::repository::secret;
 
 pub fn save(mut job: Job, user_id: i32) -> Result<Job> {
     let connection = database::connection()?;
@@ -32,13 +30,12 @@ pub fn save(mut job: Job, user_id: i32) -> Result<Job> {
     Ok(job)
 }
 
-pub fn update(mut job: Job, user_id: i32) -> Result<Job> {
+pub fn update(mut job: Job) -> Result<Job> {
     let connection = database::connection()?;
 
     connection.execute(
-        "UPDATE jobs SET user_id = $1, schedule = $2, command = $3, last_run = $4, next_run = $5 WHERE id = $6;",
+        "UPDATE jobs SET schedule = $1, command = $2, last_run = $3, next_run = $4 WHERE id = $5;",
         &[
-            &user_id,
             &job.schedule,
             &job.command,
             &job.last_run,

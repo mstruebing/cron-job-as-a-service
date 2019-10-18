@@ -1,6 +1,7 @@
 // internal
 use crate::database;
 use crate::error::Result;
+use crate::model::job::Job;
 use crate::model::user::User;
 use crate::repository::job;
 
@@ -30,7 +31,7 @@ pub fn save(mut user: User) -> Result<User> {
 
     // convert iterator over results to result of an iterator. if a single element in the iterator
     // is an `Err`, the result will be an `Err`
-    let jobs: Result<Vec<_>, _> = user
+    let jobs: Result<Vec<Job>> = user
         .jobs
         .iter()
         .map(|job| job::save(job.clone(), user.id.unwrap()))
@@ -48,7 +49,7 @@ pub fn update(mut user: User) -> Result<User> {
         &[&user.email, &user.password, &user.id.unwrap()],
     )?;
 
-    let jobs: Result<Vec<_>, _> = user
+    let jobs: Result<Vec<Job>> = user
         .jobs
         .iter()
         .map(|job| job::save(job.clone(), user.id.unwrap()))

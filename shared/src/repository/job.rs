@@ -2,6 +2,7 @@
 use crate::database;
 use crate::error::Result;
 use crate::model::job::Job;
+use crate::model::secret::Secret;
 use crate::repository::secret;
 
 pub fn save(mut job: Job, user_id: i32) -> Result<Job> {
@@ -23,7 +24,7 @@ pub fn save(mut job: Job, user_id: i32) -> Result<Job> {
         job.id = Some(id);
     }
 
-    let secrets: Result<Vec<_>, _> = job
+    let secrets: Result<Vec<Secret>> = job
         .secrets
         .iter()
         .map(|secret| secret::save(secret.clone(), job.id.unwrap()))
@@ -47,7 +48,7 @@ pub fn update(mut job: Job) -> Result<Job> {
         ],
     )?;
 
-    let secrets: Result<Vec<_>, _> = job
+    let secrets: Result<Vec<Secret>> = job
         .secrets
         .iter()
         .map(|secret| secret::save(secret.clone(), job.id.unwrap()))

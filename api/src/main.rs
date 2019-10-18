@@ -45,11 +45,13 @@ fn test_save_delete() -> Result<()> {
 }
 
 fn save_something_for_worker() -> Result<()> {
+    let current_timestamp = utils::get_current_timestamp();
+    let schedule = "* * * * * ";
     let jobs = vec![Job::new()
-        .schedule("* * * * * ")
+        .schedule(schedule)
         .command("echo $(date +%s) $hello >> world.txt")
-        .last_run(0)
-        .next_run(utils::get_current_timestamp() + 30)
+        .last_run(current_timestamp)
+        .next_run(utils::get_next_run(schedule))
         .secrets(vec![
             Secret::new().key("hello").value("world"),
             Secret::new().key("world").value("hello"),

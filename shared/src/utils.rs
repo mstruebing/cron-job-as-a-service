@@ -37,7 +37,7 @@ pub fn get_next_run(schedule: &str) -> i32 {
 //       min    hour   day of month    month of year   day of week
 pub fn transform_to_original_cron_format(schedule: &str) -> String {
     let schedule_parts: Vec<&str> = schedule.split(' ').collect();
-    let mut transformed = "".to_owned();
+    let mut transformed = String::new();
 
     for (index, schedule_part) in schedule_parts.iter().enumerate() {
         if index == 0 || index == schedule_parts.len() - 1 {
@@ -54,10 +54,7 @@ pub fn transform_to_original_cron_format(schedule: &str) -> String {
 //                                  to
 // sec   min    hour   day of month    month of year   day of week   year
 pub fn transform_to_modified_cron_format(schedule: &str) -> String {
-    let mut transformed = "0 ".to_owned();
-    transformed.push_str(schedule);
-    transformed.push_str(" *");
-    transformed
+    format!("0 {} *", schedule)
 }
 
 pub fn convert_row_to_job(row: Row) -> Job {

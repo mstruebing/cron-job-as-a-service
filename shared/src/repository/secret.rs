@@ -22,7 +22,7 @@ pub fn update(secret: Secret) -> Result<Secret> {
     let connection = database::connection()?;
 
     connection.execute(
-        "UPDATE secrets SET key = $1, value = $2 WHERE id = 4;",
+        "UPDATE secrets SET key = $1, value = $2 WHERE id = $3;",
         &[&secret.key, &secret.value, &secret.id.unwrap()],
     )?;
 

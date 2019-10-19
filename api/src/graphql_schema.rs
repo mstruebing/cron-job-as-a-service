@@ -6,14 +6,20 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
 
-use juniper::{EmptyMutation, RootNode};
+use juniper::RootNode;
+
+use crate::schema::jobs;
+use crate::schema::secrets;
+use crate::schema::users;
 
 pub struct QueryRoot;
 
-pub type Schema = RootNode<'static, QueryRoot, EmptyMutation<()>>;
+pub struct MutationRoot;
+
+pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;
 
 pub fn create_schema() -> Schema {
-    Schema::new(QueryRoot {}, EmptyMutation::new())
+    Schema::new(QueryRoot {}, MutationRoot {})
 }
 
 #[juniper::object]
@@ -41,9 +47,43 @@ impl QueryRoot {
     }
 }
 
+#[juniper::object]
+impl MutationRoot {
+    fn create_user(data: NewUser) -> User {
+        let connection = establish_connection();
+        diesel::insert_into(users::table)
+            .values(&data)
+            .get_result(&connection)
+            .expect("Error saving user")
+    }
+
+    fn create_job(data: NewJob) -> Job {
+        let connection = establish_connection();
+        diesel::insert_into(jobs::table)
+            .values(&data)
+            .get_result(&connection)
+            .expect("Error saving job")
+    }
+
+    fn create_secret(data: NewSecret) -> Secret {
+        let connection = establish_connection();
+        diesel::insert_into(secrets::table)
+            .values(&data)
+            .get_result(&connection)
+            .expect("Error saving secret")
+    }
+}
+
 #[derive(Queryable)]
 pub struct User {
     pub id: i32,
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(juniper::GraphQLInputObject, Insertable)]
+#[table_name = "users"]
+pub struct NewUser {
     pub email: String,
     pub password: String,
 }
@@ -79,6 +119,16 @@ pub struct Job {
     pub command: String,
     pub last_run: i32,
     pub next_run: i32,
+}
+
+#[derive(juniper::GraphQLInputObject, Insertable)]
+#[table_name = "jobs"]
+pub struct NewJob {
+    pub user_id: i32,
+    pub schedule: String,
+    pub command: String,
+    pub last_run: i32, // TODO: generate self
+    pub next_run: i32, // TODO: generate self
 }
 
 #[juniper::object(description = "A Job of a User")]
@@ -120,6 +170,14 @@ impl Job {
 #[derive(Queryable)]
 pub struct Secret {
     pub id: i32,
+    pub job_id: i32,
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(juniper::GraphQLInputObject, Insertable)]
+#[table_name = "secrets"]
+pub struct NewSecret {
     pub job_id: i32,
     pub key: String,
     pub value: String,

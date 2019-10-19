@@ -1,5 +1,5 @@
 [package]
-name = "cass-runner"
+name = "runner"
 version = "0.1.0"
 authors = ["Max Strübing <mxstrbng@gmail.com>"]
 edition = "2018"

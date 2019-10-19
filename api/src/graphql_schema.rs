@@ -1,12 +1,14 @@
-extern crate dotenv;
-
+// stdlib
 use std::env;
 
+// modules
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
-
 use juniper::RootNode;
+
+// internal
+use shared::utils;
 
 use crate::schema::jobs;
 use crate::schema::secrets;
@@ -25,26 +27,25 @@ pub fn create_schema() -> Schema {
 #[juniper::object]
 impl QueryRoot {
     fn users() -> Vec<User> {
-        use crate::schema::users::dsl::users;
         let connection = establish_connection();
 
-        users
+        users::dsl::users
             .load::<User>(&connection)
             .expect("Error loading users")
     }
 
     fn jobs() -> Vec<Job> {
-        use crate::schema::jobs::dsl::jobs;
         let connection = establish_connection();
 
-        jobs.load::<Job>(&connection).expect("Error loading jobs")
+        jobs::dsl::jobs
+            .load::<Job>(&connection)
+            .expect("Error loading jobs")
     }
 
     fn secrets() -> Vec<Secret> {
-        use crate::schema::secrets::dsl::secrets;
         let connection = establish_connection();
 
-        secrets
+        secrets::dsl::secrets
             .load::<Secret>(&connection)
             .expect("Error loading secrets")
     }
@@ -63,6 +64,17 @@ impl MutationRoot {
 
     fn create_job(data: NewJob) -> Job {
         let connection = establish_connection();
+        let last_run = utils::get_current_timestamp();
+        let next_run = utils::get_next_run(&data.schedule);
+
+        // TODO: is there a better way to merge these structs?
+        let data = NewJobWithRuns {
+            user_id: data.user_id,
+            schedule: data.schedule,
+            command: data.command,
+            last_run,
+            next_run,
+        };
 
         diesel::insert_into(jobs::table)
             .values(&data)
@@ -80,40 +92,47 @@ impl MutationRoot {
     }
 
     fn update_user(id: i32, data: UpdatedUser) -> User {
-        use crate::schema::users::dsl::users;
         let connection = establish_connection();
 
-        diesel::update(users.find(id))
+        diesel::update(users::dsl::users.find(id))
             .set(&data)
             .get_result(&connection)
             .expect("Error updating user")
     }
 
     fn update_job(id: i32, data: UpdadedJob) -> Job {
-        use crate::schema::jobs::dsl::jobs;
         let connection = establish_connection();
 
-        diesel::update(jobs.find(id))
+        let last_run = utils::get_current_timestamp();
+        let next_run = utils::get_next_run(&data.schedule);
+
+        // TODO: is there a better way to merge these structs?
+        let data = UpdadedJobWithRuns {
+            schedule: data.schedule,
+            command: data.command,
+            last_run,
+            next_run,
+        };
+
+        diesel::update(jobs::dsl::jobs.find(id))
             .set(&data)
             .get_result(&connection)
             .expect("Error updating job")
     }
 
     fn update_secret(id: i32, data: UpdatedSecret) -> Secret {
-        use crate::schema::secrets::dsl::secrets;
         let connection = establish_connection();
 
-        diesel::update(secrets.find(id))
+        diesel::update(secrets::dsl::secrets.find(id))
             .set(&data)
             .get_result(&connection)
             .expect("Error updating secret")
     }
 
     fn delete_user(id: i32) -> bool {
-        use crate::schema::users::dsl::users;
         let connection = establish_connection();
 
-        let num_deleted = diesel::delete(users.find(id))
+        let num_deleted = diesel::delete(users::dsl::users.find(id))
             .execute(&connection)
             .expect("Error deleting user");
 
@@ -121,10 +140,9 @@ impl MutationRoot {
     }
 
     fn delete_job(id: i32) -> bool {
-        use crate::schema::jobs::dsl::jobs;
         let connection = establish_connection();
 
-        let num_deleted = diesel::delete(jobs.find(id))
+        let num_deleted = diesel::delete(jobs::dsl::jobs.find(id))
             .execute(&connection)
             .expect("Error deleting job");
 
@@ -132,10 +150,9 @@ impl MutationRoot {
     }
 
     fn delete_secret(id: i32) -> bool {
-        use crate::schema::secrets::dsl::secrets;
         let connection = establish_connection();
 
-        let num_deleted = diesel::delete(secrets.find(id))
+        let num_deleted = diesel::delete(secrets::dsl::secrets.find(id))
             .execute(&connection)
             .expect("Error deleting secret");
 
@@ -179,10 +196,10 @@ impl User {
     }
 
     pub fn jobs(&self) -> Vec<Job> {
-        use crate::schema::jobs::dsl::{jobs, user_id};
         let connection = establish_connection();
 
-        jobs.filter(user_id.eq(self.id))
+        jobs::dsl::jobs
+            .filter(jobs::dsl::user_id.eq(self.id))
             .load::<Job>(&connection)
             .expect("Error loading jobs for user")
     }
@@ -198,21 +215,38 @@ pub struct Job {
     pub next_run: i32,
 }
 
-#[derive(juniper::GraphQLInputObject, Insertable)]
-#[table_name = "jobs"]
+#[derive(juniper::GraphQLInputObject)]
 pub struct NewJob {
     pub user_id: i32,
     pub schedule: String,
     pub command: String,
-    pub last_run: i32, // TODO: generate self
-    pub next_run: i32, // TODO: generate self
 }
 
-#[derive(juniper::GraphQLInputObject, AsChangeset)]
+#[derive(Insertable)]
 #[table_name = "jobs"]
+// TODO: Consider a better name
+pub struct NewJobWithRuns {
+    pub user_id: i32,
+    pub schedule: String,
+    pub command: String,
+    pub last_run: i32,
+    pub next_run: i32,
+}
+
+#[derive(juniper::GraphQLInputObject)]
 pub struct UpdadedJob {
     pub schedule: String,
     pub command: String,
+}
+
+#[derive(AsChangeset)]
+#[table_name = "jobs"]
+// TODO: Consider a better name
+pub struct UpdadedJobWithRuns {
+    pub schedule: String,
+    pub command: String,
+    pub last_run: i32,
+    pub next_run: i32,
 }
 
 #[juniper::object(description = "A Job of a User")]
@@ -242,11 +276,10 @@ impl Job {
     }
 
     pub fn secrets(&self) -> Vec<Secret> {
-        use crate::schema::secrets::dsl::{job_id, secrets};
         let connection = establish_connection();
 
-        secrets
-            .filter(job_id.eq(self.id))
+        secrets::dsl::secrets
+            .filter(secrets::dsl::job_id.eq(self.id))
             .load::<Secret>(&connection)
             .expect("Error loading jobs for user")
     }

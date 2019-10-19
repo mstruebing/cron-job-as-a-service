@@ -72,6 +72,33 @@ impl MutationRoot {
             .get_result(&connection)
             .expect("Error saving secret")
     }
+
+    fn update_user(id: i32, data: UpdatedUser) -> User {
+        use crate::schema::users::dsl::*;
+        let connection = establish_connection();
+        diesel::update(users.find(id))
+            .set(&data)
+            .get_result(&connection)
+            .expect("Error updating user")
+    }
+
+    fn update_job(id: i32, data: UpdadedJob) -> Job {
+        use crate::schema::jobs::dsl::*;
+        let connection = establish_connection();
+        diesel::update(jobs.find(id))
+            .set(&data)
+            .get_result(&connection)
+            .expect("Error updating job")
+    }
+
+    fn update_secret(id: i32, data: UpdatedSecret) -> Secret {
+        use crate::schema::secrets::dsl::*;
+        let connection = establish_connection();
+        diesel::update(secrets.find(id))
+            .set(&data)
+            .get_result(&connection)
+            .expect("Error updating secret")
+    }
 }
 
 #[derive(Queryable)]
@@ -84,6 +111,13 @@ pub struct User {
 #[derive(juniper::GraphQLInputObject, Insertable)]
 #[table_name = "users"]
 pub struct NewUser {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(juniper::GraphQLInputObject, AsChangeset)]
+#[table_name = "users"]
+pub struct UpdatedUser {
     pub email: String,
     pub password: String,
 }
@@ -129,6 +163,13 @@ pub struct NewJob {
     pub command: String,
     pub last_run: i32, // TODO: generate self
     pub next_run: i32, // TODO: generate self
+}
+
+#[derive(juniper::GraphQLInputObject, AsChangeset)]
+#[table_name = "jobs"]
+pub struct UpdadedJob {
+    pub schedule: String,
+    pub command: String,
 }
 
 #[juniper::object(description = "A Job of a User")]
@@ -179,6 +220,13 @@ pub struct Secret {
 #[table_name = "secrets"]
 pub struct NewSecret {
     pub job_id: i32,
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(juniper::GraphQLInputObject, AsChangeset)]
+#[table_name = "secrets"]
+pub struct UpdatedSecret {
     pub key: String,
     pub value: String,
 }

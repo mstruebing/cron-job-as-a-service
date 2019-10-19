@@ -7,8 +7,8 @@ build-release:
 	cargo build --release
 
 run:
-	cargo run --bin cass-api
-	cargo run --bin cass-runner
+	cargo run --bin api
+	cargo run --bin runner
 
 test:
 	cargo test

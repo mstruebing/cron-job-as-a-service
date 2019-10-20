@@ -7,6 +7,7 @@ use std::io::prelude::*;
 use dotenv::dotenv;
 
 // internal
+// TODO: Why do I need a `crate` here?
 use crate::utils::get_current_timestamp;
 
 pub fn info(msg: &str) {

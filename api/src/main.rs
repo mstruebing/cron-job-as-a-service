@@ -1,17 +1,17 @@
-#[macro_use]
-extern crate diesel;
-extern crate juniper;
-
+// stdlib
 use std::io;
 use std::sync::Arc;
 
+// modules
 use actix_web::{web, App, Error, HttpResponse, HttpServer};
 use futures::future::Future;
-use juniper::http::graphiql::graphiql_source;
-use juniper::http::GraphQLRequest;
+use juniper::http::{graphiql::graphiql_source, GraphQLRequest};
 
+// own modules
+extern crate shared;
+
+// internal
 mod graphql_schema;
-mod schema;
 
 use crate::graphql_schema::{create_schema, Schema};
 
@@ -42,6 +42,7 @@ fn graphql(
             .body(user))
     })
 }
+
 fn graphiql() -> HttpResponse {
     let html = graphiql_source("http://localhost:8080/graphql");
     HttpResponse::Ok()

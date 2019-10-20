@@ -5,10 +5,7 @@ use juniper::RootNode;
 // internal
 use shared::{
     database,
-    models::{
-        Job, NewJob, NewJobWithRuns, NewSecret, NewUser, Secret, UpdadedJob, UpdadedJobWithRuns,
-        UpdatedSecret, UpdatedUser, User,
-    },
+    models::{job::*, secret::*, user::*},
     schema::{jobs, secrets, users},
     utils,
 };

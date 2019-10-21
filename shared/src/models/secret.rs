@@ -1,7 +1,7 @@
 use crate::schema::secrets;
 use diesel::{AsChangeset, Insertable, Queryable};
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 pub struct Secret {
     pub id: i32,
     pub job_id: i32,
@@ -40,5 +40,11 @@ impl Secret {
 
     pub fn job_id(&self) -> i32 {
         self.job_id
+    }
+}
+
+impl Secret {
+    pub fn get_as_string(&self) -> String {
+        format!("{}={}", self.key, self.value)
     }
 }

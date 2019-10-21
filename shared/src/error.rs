@@ -10,6 +10,7 @@ pub type Result<T, E = Error> = result::Result<T, E>;
 pub enum Error {
     IO(io::Error),
     Dotenv(dotenv::Error),
+    Diesel(diesel::result::Error),
 }
 
 impl fmt::Display for Error {
@@ -18,6 +19,7 @@ impl fmt::Display for Error {
         match self {
             IO(err) => write!(fmt, "IO error ({})", err),
             Dotenv(err) => write!(fmt, "Dotenv error ({})", err),
+            Diesel(err) => write!(fmt, "Diesel error ({})", err),
         }
     }
 }

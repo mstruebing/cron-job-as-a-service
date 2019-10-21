@@ -252,7 +252,6 @@ version = "0.1.0"
 dependencies = [
  "actix-web 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 1.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dotenv 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)",
  "juniper 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1342,6 +1341,7 @@ name = "runner"
 version = "0.1.0"
 dependencies = [
  "chan 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
+ "diesel 1.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "shared 0.1.0",
 ]
 

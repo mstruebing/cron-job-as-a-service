@@ -7,7 +7,7 @@ use crate::models::secret::Secret;
 use crate::schema::jobs;
 use crate::schema::secrets;
 
-#[derive(Queryable)]
+#[derive(Queryable, AsChangeset, Identifiable, Debug)]
 pub struct Job {
     pub id: i32,
     pub user_id: i32,
@@ -78,11 +78,31 @@ impl Job {
     }
 
     pub fn secrets(&self) -> Vec<Secret> {
-        let connection = database::establish_connection();
-
-        secrets::dsl::secrets
-            .filter(secrets::dsl::job_id.eq(self.id))
-            .load::<Secret>(&connection)
-            .expect("Error loading jobs for user")
+        get_secrets(self)
     }
+}
+
+impl Job {
+    pub fn secrets(&self) -> Vec<Secret> {
+        get_secrets(self)
+    }
+
+    pub fn last_run(mut self, last_run: i32) -> Self {
+        self.last_run = last_run;
+        self
+    }
+
+    pub fn next_run(mut self, next_run: i32) -> Self {
+        self.next_run = next_run;
+        self
+    }
+}
+
+fn get_secrets(job: &Job) -> Vec<Secret> {
+    let connection = database::establish_connection();
+
+    secrets::dsl::secrets
+        .filter(secrets::dsl::job_id.eq(job.id))
+        .load::<Secret>(&connection)
+        .expect("Error loading jobs for user")
 }

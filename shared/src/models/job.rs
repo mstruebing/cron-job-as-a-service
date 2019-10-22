@@ -82,6 +82,8 @@ impl Job {
     }
 }
 
+// TODO: Is it really neccessary to implement this and not using the one above
+// and add these methods there?
 impl Job {
     pub fn secrets(&self) -> Vec<Secret> {
         get_secrets(self)

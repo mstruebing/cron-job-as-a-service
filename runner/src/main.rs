@@ -23,12 +23,10 @@ fn main() {
                 let current_timestamp = utils::get_current_timestamp();
                 let jobs = get_jobs_to_run(current_timestamp);
                 for job in jobs {
-                    if job.next_run == current_timestamp {
-                        let result = run(job);
-                        match result {
-                            Ok(job) => log(&format!("Successyull ran job: {:?}", job)),
-                            Err(err) => log(&format!("ERROR: {:?}", err)),
-                        }
+                    let result = run(job);
+                    match result {
+                        Ok(job) => log(&format!("Successyull ran job: {:?}", job)),
+                        Err(err) => log(&format!("ERROR: {:?}", err)),
                     }
                 }
             },
@@ -65,6 +63,7 @@ fn get_jobs_to_run(current_timestamp: i32) -> Vec<Job> {
     let connection = database::establish_connection();
 
     let jobs = jobs::dsl::jobs
+        // TODO: is `eq` sufficient? maybe use `ge` greater-equal
         .filter(jobs::dsl::next_run.eq(current_timestamp))
         .load::<Job>(&connection)
         .expect("Error loading jobs");

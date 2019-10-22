@@ -62,11 +62,9 @@ pub fn run(job: Job) -> Result<Job> {
 fn get_jobs_to_run(current_timestamp: i32) -> Vec<Job> {
     let connection = database::establish_connection();
 
-    let jobs = jobs::dsl::jobs
+    jobs::dsl::jobs
         // TODO: is `eq` sufficient? maybe use `ge` greater-equal
         .filter(jobs::dsl::next_run.eq(current_timestamp))
         .load::<Job>(&connection)
-        .expect("Error loading jobs");
-
-    jobs
+        .expect("Error loading jobs")
 }

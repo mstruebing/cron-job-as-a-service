@@ -1,17 +1,9 @@
 // stdlib
-use std::str::FromStr;
-use std::time;
+use std::{str::FromStr, time};
 
 // modules
 use chrono::Utc;
 use cron::Schedule;
-use postgres::rows::Row;
-
-// internal
-use crate::database;
-use crate::error::Result;
-use crate::model::job::Job;
-use crate::model::secret::Secret;
 
 pub fn get_current_timestamp() -> i32 {
     let start = time::SystemTime::now();
@@ -55,43 +47,4 @@ pub fn transform_to_original_cron_format(schedule: &str) -> String {
 // sec   min    hour   day of month    month of year   day of week   year
 pub fn transform_to_modified_cron_format(schedule: &str) -> String {
     format!("0 {} *", schedule)
-}
-
-pub fn convert_row_to_job(row: Row) -> Job {
-    let id: Option<i32> = Some(row.get("id"));
-    let command: String = row.get("command");
-    let schedule: String = row.get("schedule");
-    let next_run: i32 = row.get("next_run");
-    let last_run: i32 = row.get("last_run");
-
-    Job::new()
-        .id(id)
-        .command(&command)
-        .next_run(next_run)
-        .last_run(last_run)
-        .schedule(&schedule)
-}
-
-pub fn convert_row_to_secret(row: Row) -> Secret {
-    let key: String = row.get("key");
-    let value: String = row.get("value");
-    let id: Option<i32> = Some(row.get("id"));
-
-    Secret::new().id(id).key(&key).value(&value)
-}
-
-pub fn get_secrets_for_job(job: &Job) -> Result<Vec<Secret>> {
-    let connection = database::connection()?;
-    let mut secrets = vec![];
-
-    for row in &connection.query(
-        "SELECT id, key, value
-        FROM secrets
-        WHERE job_id = $1",
-        &[&job.id.unwrap()],
-    )? {
-        secrets.push(convert_row_to_secret(row));
-    }
-
-    Ok(secrets)
 }

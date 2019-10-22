@@ -1,67 +1,51 @@
-// Own modules
-use shared::database;
-use shared::error::Result;
-use shared::model::job::Job;
-use shared::model::secret::Secret;
-use shared::model::user::User;
-use shared::repository::job;
-use shared::repository::secret;
-use shared::repository::user;
-use shared::utils;
+// stdlib
+use std::io;
+use std::sync::Arc;
 
-// Contains nonsense currently, just to test these funcs :)
-fn main() -> Result<()> {
-    test_save_delete()?;
-    save_something_for_worker()?;
+// modules
+use actix_web::{web, App, Error, HttpResponse, HttpServer};
+use futures::future::Future;
+use juniper::http::{graphiql::graphiql_source, GraphQLRequest};
 
-    Ok(())
+// own modules
+extern crate shared;
+
+// internal
+mod graphql_schema;
+
+use crate::graphql_schema::{create_schema, Schema};
+
+fn main() -> io::Result<()> {
+    let schema = std::sync::Arc::new(create_schema());
+    HttpServer::new(move || {
+        App::new()
+            .data(schema.clone())
+            .service(web::resource("/graphql").route(web::post().to_async(graphql)))
+            .service(web::resource("/graphiql").route(web::get().to(graphiql)))
+    })
+    .bind("localhost:8080")?
+    .run()
 }
 
-fn test_save_delete() -> Result<()> {
-    database::reset()?;
-    let user = User::new();
-    let user = user::save(user)?;
-
-    let job = Job::new();
-    let job = job::save(job, user.id.unwrap())?;
-
-    let secret = Secret::new();
-    secret::save(secret.clone(), job.id.unwrap())?;
-
-    let user = user.id(Some(1)).email("someone@example.com");
-    let user = user::update(user)?;
-
-    let job = job.id(Some(1)).command("echo hello");
-    job::update(job.clone())?;
-
-    let secret = secret.id(Some(1)).key("hello").value("world");
-    secret::update(secret.clone())?;
-
-    secret::delete(secret)?;
-    job::delete(job)?;
-    user::delete(user)?;
-
-    Ok(())
+fn graphql(
+    st: web::Data<Arc<Schema>>,
+    data: web::Json<GraphQLRequest>,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    web::block(move || {
+        let res = data.execute(&st, &());
+        Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
+    })
+    .map_err(Error::from)
+    .and_then(|user| {
+        Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(user))
+    })
 }
 
-fn save_something_for_worker() -> Result<()> {
-    let current_timestamp = utils::get_current_timestamp();
-    let schedule = "* * * * * ";
-    let jobs = vec![Job::new()
-        .schedule(schedule)
-        .command("echo $(date +%s) $hello >> world.txt")
-        .last_run(current_timestamp)
-        .next_run(utils::get_next_run(schedule))
-        .secrets(vec![
-            Secret::new().key("hello").value("world"),
-            Secret::new().key("world").value("hello"),
-        ])];
-    let user = User::new()
-        .email("someone@example.com")
-        .password("pass")
-        .jobs(jobs);
-
-    user::save(user)?;
-
-    Ok(())
+fn graphiql() -> HttpResponse {
+    let html = graphiql_source("http://localhost:8080/graphql");
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(html)
 }

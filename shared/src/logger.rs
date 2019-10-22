@@ -1,7 +1,5 @@
 // stdlib
-use std::env;
-use std::fs::OpenOptions;
-use std::io::prelude::*;
+use std::{env, fs::OpenOptions, io::prelude::*};
 
 // modules
 use dotenv::dotenv;

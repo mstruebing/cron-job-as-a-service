@@ -3,9 +3,10 @@ name: Rust
 on: [push, pull_request]
 
 jobs:
-  lint:
-    name: Linting and Formatting Checks
+  all:
+    name: all
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
@@ -13,61 +14,32 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
           toolchain: stable
           override: true
+          components: rustfmt, clippy
 
-      - name: Install rustfmt
-        run: rustup component add rustfmt
-
-      - name: Check Formatting
+      - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-      - name: Install clippy
-        run: rustup component add clippy
-
-      - name: Clippy Linting
+      - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: -- -D warnings
 
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
+      - name: Install libpq-dev
+        run: sudo apt-get install libpq-dev -y
 
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
       - name: Run Tests
         uses: actions-rs/cargo@v1
         with:
           command: test
 
-  build:
-    name: Build Application
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
       - name: Build application
         uses: actions-rs/cargo@v1
         with:
           command: build
-

@@ -6,24 +6,25 @@ use chan::chan_select;
 use diesel::prelude::*;
 
 // // Own modules
-use shared::database;
+use shared::database::{establish_connection, PgPool};
 use shared::error::Result;
 use shared::logger::log;
-use shared::models::job::Job;
+use shared::models::job::{get_secrets, Job};
 use shared::schema::jobs;
 use shared::utils;
 
 fn main() {
     // TODO: is this a good tick interval?
     let tick = chan::tick_ms(1000);
+    let pool = establish_connection();
 
     loop {
         chan_select! {
             tick.recv() => {
                 let current_timestamp = utils::get_current_timestamp();
-                let jobs = get_jobs_to_run(current_timestamp);
+                let jobs = get_jobs_to_run(&pool, current_timestamp);
                 for job in jobs {
-                    let result = run(job);
+                    let result = run(&pool, job);
                     match result {
                         Ok(job) => log(&format!("Successyull ran job: {:?}", job)),
                         Err(err) => log(&format!("ERROR: {:?}", err)),
@@ -34,8 +35,8 @@ fn main() {
     }
 }
 
-pub fn run(job: Job) -> Result<Job> {
-    let secrets = job.secrets();
+pub fn run(pool: &PgPool, job: Job) -> Result<Job> {
+    let secrets = get_secrets(&job, &pool);
     let args = if !secrets.is_empty() {
         let args = secrets
             .iter()
@@ -50,7 +51,8 @@ pub fn run(job: Job) -> Result<Job> {
     let job = job.last_run(utils::get_current_timestamp());
     let next_run = utils::get_next_run(&job.schedule);
     let job = job.next_run(next_run);
-    let connection = database::establish_connection();
+
+    let connection = pool.get().expect("Expected a connection");
     diesel::update(jobs::dsl::jobs.find(job.id))
         .set(&job)
         .execute(&connection)
@@ -59,8 +61,8 @@ pub fn run(job: Job) -> Result<Job> {
     Ok(job)
 }
 
-fn get_jobs_to_run(current_timestamp: i32) -> Vec<Job> {
-    let connection = database::establish_connection();
+fn get_jobs_to_run(pool: &PgPool, current_timestamp: i32) -> Vec<Job> {
+    let connection = pool.get().expect("Expected a connection");
 
     jobs::dsl::jobs
         // TODO: is `eq` sufficient? maybe use `ge` greater-equal

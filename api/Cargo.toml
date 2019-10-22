@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 shared = { path = "../shared", version = "0.1.0" }
 actix-web = "1.0.8"
-diesel = { version = "1.4.3", features = ["postgres"] }
+diesel = { version = "1.4.3", features = ["postgres", "r2d2"] }
 futures = "0.1.29"
 juniper = "0.14.0"
 serde = "1.0.101"

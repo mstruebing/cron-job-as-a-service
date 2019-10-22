@@ -8,15 +8,16 @@ use futures::future::Future;
 use juniper::http::{graphiql::graphiql_source, GraphQLRequest};
 
 // own modules
-extern crate shared;
+use shared::database::establish_connection;
+use shared::Context;
 
 // internal
 mod graphql_schema;
-
 use crate::graphql_schema::{create_schema, Schema};
 
 fn main() -> io::Result<()> {
     let schema = std::sync::Arc::new(create_schema());
+
     HttpServer::new(move || {
         App::new()
             .data(schema.clone())
@@ -32,7 +33,9 @@ fn graphql(
     data: web::Json<GraphQLRequest>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     web::block(move || {
-        let res = data.execute(&st, &());
+        let pool = establish_connection();
+        let context = Context { pool };
+        let res = data.execute(&st, &context);
         Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
     })
     .map_err(Error::from)

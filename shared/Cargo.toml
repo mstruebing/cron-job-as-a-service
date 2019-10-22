@@ -11,5 +11,5 @@ cron = "0.6.0"
 chrono = "0.4.9"
 postgres = "0.15"
 dotenv = "0.15"
-diesel = { version = "1.4.3", features = ["postgres"] }
+diesel = { version = "1.4.3", features = ["postgres", "r2d2"] }
 juniper = "0.14.0"

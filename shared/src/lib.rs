@@ -8,3 +8,10 @@ pub mod logger;
 pub mod models;
 pub mod schema;
 pub mod utils;
+
+// TODO: Where to put this?
+pub struct Context {
+    pub pool: database::PgPool,
+}
+
+impl juniper::Context for Context {}

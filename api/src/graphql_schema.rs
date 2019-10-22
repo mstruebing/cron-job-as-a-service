@@ -4,10 +4,9 @@ use juniper::RootNode;
 
 // internal
 use shared::{
-    database,
     models::{job::*, secret::*, user::*},
     schema::{jobs, secrets, users},
-    utils,
+    utils, Context,
 };
 
 pub struct QueryRoot;
@@ -20,26 +19,29 @@ pub fn create_schema() -> Schema {
     Schema::new(QueryRoot {}, MutationRoot {})
 }
 
-#[juniper::object]
+#[juniper::object(
+    description = "The query type",
+    Context = Context,
+)]
 impl QueryRoot {
-    fn users() -> Vec<User> {
-        let connection = database::establish_connection();
+    fn users(context: &Context) -> Vec<User> {
+        let connection = context.pool.get().expect("Expected a connection");
 
         users::dsl::users
             .load::<User>(&connection)
             .expect("Error loading users")
     }
 
-    fn jobs() -> Vec<Job> {
-        let connection = database::establish_connection();
+    fn jobs(context: &Context) -> Vec<Job> {
+        let connection = context.pool.get().expect("Expected a connection");
 
         jobs::dsl::jobs
             .load::<Job>(&connection)
             .expect("Error loading jobs")
     }
 
-    fn secrets() -> Vec<Secret> {
-        let connection = database::establish_connection();
+    fn secrets(context: &Context) -> Vec<Secret> {
+        let connection = context.pool.get().expect("Expected a connection");
 
         secrets::dsl::secrets
             .load::<Secret>(&connection)
@@ -47,10 +49,13 @@ impl QueryRoot {
     }
 }
 
-#[juniper::object]
+#[juniper::object(
+    description = "The mutation type",
+    Context = Context,
+)]
 impl MutationRoot {
-    fn create_user(data: NewUser) -> User {
-        let connection = database::establish_connection();
+    fn create_user(context: &Context, data: NewUser) -> User {
+        let connection = context.pool.get().expect("Expected a connection");
 
         diesel::insert_into(users::table)
             .values(&data)
@@ -58,8 +63,8 @@ impl MutationRoot {
             .expect("Error saving user")
     }
 
-    fn create_job(data: NewJob) -> Job {
-        let connection = database::establish_connection();
+    fn create_job(context: &Context, data: NewJob) -> Job {
+        let connection = context.pool.get().expect("Expected a connection");
         let last_run = utils::get_current_timestamp();
         let next_run = utils::get_next_run(&data.schedule);
 
@@ -78,8 +83,8 @@ impl MutationRoot {
             .expect("Error saving job")
     }
 
-    fn create_secret(data: NewSecret) -> Secret {
-        let connection = database::establish_connection();
+    fn create_secret(context: &Context, data: NewSecret) -> Secret {
+        let connection = context.pool.get().expect("Expected a connection");
 
         diesel::insert_into(secrets::table)
             .values(&data)
@@ -87,8 +92,8 @@ impl MutationRoot {
             .expect("Error saving secret")
     }
 
-    fn update_user(id: i32, data: UpdatedUser) -> User {
-        let connection = database::establish_connection();
+    fn update_user(context: &Context, id: i32, data: UpdatedUser) -> User {
+        let connection = context.pool.get().expect("Expected a connection");
 
         diesel::update(users::dsl::users.find(id))
             .set(&data)
@@ -96,8 +101,8 @@ impl MutationRoot {
             .expect("Error updating user")
     }
 
-    fn update_job(id: i32, data: UpdadedJob) -> Job {
-        let connection = database::establish_connection();
+    fn update_job(context: &Context, id: i32, data: UpdadedJob) -> Job {
+        let connection = context.pool.get().expect("Expected a connection");
 
         let last_run = utils::get_current_timestamp();
         let next_run = utils::get_next_run(&data.schedule);
@@ -116,8 +121,8 @@ impl MutationRoot {
             .expect("Error updating job")
     }
 
-    fn update_secret(id: i32, data: UpdatedSecret) -> Secret {
-        let connection = database::establish_connection();
+    fn update_secret(context: &Context, id: i32, data: UpdatedSecret) -> Secret {
+        let connection = context.pool.get().expect("Expected a connection");
 
         diesel::update(secrets::dsl::secrets.find(id))
             .set(&data)
@@ -125,8 +130,8 @@ impl MutationRoot {
             .expect("Error updating secret")
     }
 
-    fn delete_user(id: i32) -> bool {
-        let connection = database::establish_connection();
+    fn delete_user(context: &Context, id: i32) -> bool {
+        let connection = context.pool.get().expect("Expected a connection");
 
         let num_deleted = diesel::delete(users::dsl::users.find(id))
             .execute(&connection)
@@ -135,8 +140,8 @@ impl MutationRoot {
         num_deleted != 0
     }
 
-    fn delete_job(id: i32) -> bool {
-        let connection = database::establish_connection();
+    fn delete_job(context: &Context, id: i32) -> bool {
+        let connection = context.pool.get().expect("Expected a connection");
 
         let num_deleted = diesel::delete(jobs::dsl::jobs.find(id))
             .execute(&connection)
@@ -145,8 +150,8 @@ impl MutationRoot {
         num_deleted != 0
     }
 
-    fn delete_secret(id: i32) -> bool {
-        let connection = database::establish_connection();
+    fn delete_secret(context: &Context, id: i32) -> bool {
+        let connection = context.pool.get().expect("Expected a connection");
 
         let num_deleted = diesel::delete(secrets::dsl::secrets.find(id))
             .execute(&connection)

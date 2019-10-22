@@ -3,10 +3,11 @@ use diesel::{prelude::*, AsChangeset, Insertable, Queryable};
 use juniper;
 
 // internal
-use crate::database;
+use super::super::Context;
 use crate::models::job::Job;
 use crate::schema::jobs;
 use crate::schema::users;
+
 #[derive(Queryable)]
 pub struct User {
     pub id: i32,
@@ -28,7 +29,10 @@ pub struct UpdatedUser {
     pub password: String,
 }
 
-#[juniper::object(description = "A user")]
+#[juniper::object(
+    description = "A user",
+    Context = Context,
+)]
 impl User {
     pub fn id(&self) -> i32 {
         self.id
@@ -42,8 +46,8 @@ impl User {
         self.password.as_str()
     }
 
-    pub fn jobs(&self) -> Vec<Job> {
-        let connection = database::establish_connection();
+    pub fn jobs(&self, context: &Context) -> Vec<Job> {
+        let connection = context.pool.get().expect("Expected a connection");
 
         jobs::dsl::jobs
             .filter(jobs::dsl::user_id.eq(self.id))

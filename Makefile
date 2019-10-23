@@ -1,7 +1,10 @@
-all: lint test build run
+all: lint test build-docker build run
 
 build:
 	cargo build
+
+build-docker:
+	docker build -t caas:latest -f ./misc/Dockerfile ./misc
 
 build-release:
 	cargo build --release
@@ -30,8 +33,8 @@ lint:
 	cargo clippy -- -D warnings
 	cargo fmt --all -- --check
 
-start-db:
-	docker-compose up
+db-start:
+	docker-compose -f misc/docker-compose.yml up
 
 db-connect:
 	docker-compose exec postgresql 'psql --user postgres cronjob_as_a_service'

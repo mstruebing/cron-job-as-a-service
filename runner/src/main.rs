@@ -1,5 +1,5 @@
 // // stdlib
-use std::process::Command;
+use std::{process::Command, str};
 
 // modules
 use chan::chan_select;
@@ -13,8 +13,26 @@ use shared::models::job::{get_secrets, Job};
 use shared::schema::jobs;
 use shared::utils;
 
+fn init() {
+    if !utils::is_installed("docker") {
+        panic!("docker needs to be installed");
+    }
+
+    // TODO: This seems a bit hardcoded, unflexible and fragile to me
+    // Make sure to build the docker image inside this program
+    let output = Command::new("docker")
+        .arg("images")
+        .output()
+        .expect("Docker image should be there");
+
+    if !str::from_utf8(&output.stdout).unwrap().contains("caas") {
+        panic!("caas image needed for runner");
+    }
+}
+
 fn main() {
     // TODO: is this a good tick interval?
+    init();
     let tick = chan::tick_ms(1000);
     let pool = establish_connection();
 
@@ -46,7 +64,11 @@ pub fn run(pool: &PgPool, job: Job) -> Result<Job> {
         job.command.to_string()
     };
 
-    Command::new("sh").arg("-c").arg(args).spawn()?;
+    Command::new("docker")
+        .arg("run")
+        .arg("caas") // TODO: Build image in this program
+        .arg(args)
+        .spawn()?;
 
     let job = job.last_run(utils::get_current_timestamp());
     let next_run = utils::get_next_run(&job.schedule);

@@ -1,5 +1,5 @@
 // stdlib
-use std::{str::FromStr, time};
+use std::{process::Command, str::FromStr, time};
 
 // modules
 use chrono::Utc;
@@ -47,4 +47,22 @@ pub fn transform_to_original_cron_format(schedule: &str) -> String {
 // sec   min    hour   day of month    month of year   day of week   year
 pub fn transform_to_modified_cron_format(schedule: &str) -> String {
     format!("0 {} *", schedule)
+}
+
+pub fn is_installed(command: &str) -> bool {
+    Command::new(command).output().is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn test_is_installed() {
+        assert_eq!(is_installed("docker"), true);
+        assert_eq!(is_installed("ddoocckkeerr"), false);
+
+        // to have one command which fails with an exit code != 0 with no arguments
+        assert_eq!(is_installed("grep"), true);
+    }
 }

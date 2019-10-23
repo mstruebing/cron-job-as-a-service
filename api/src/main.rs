@@ -33,7 +33,7 @@ fn graphql(
     data: web::Json<GraphQLRequest>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     web::block(move || {
-        let pool = establish_connection();
+        let pool = establish_connection().expect("Couldn't establish a database conncetion");
         let context = Context { pool };
         let res = data.execute(&st, &context);
         Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)

@@ -13,40 +13,44 @@ use shared::models::job::{get_secrets, Job};
 use shared::schema::jobs;
 use shared::utils;
 
-fn init() {
+fn check_requirements() -> Result<()> {
     if !utils::is_installed("docker") {
         panic!("docker needs to be installed");
     }
 
     // TODO: This seems a bit hardcoded, unflexible and fragile to me
     // Make sure to build the docker image inside this program
-    let output = Command::new("docker")
-        .arg("images")
-        .output()
-        .expect("Docker image should be there");
+    let output = Command::new("docker").arg("images").output()?;
 
     if !str::from_utf8(&output.stdout).unwrap().contains("caas") {
         panic!("caas image needed for runner");
     }
+
+    Ok(())
 }
 
-fn main() {
+fn main() -> Result<()> {
+    check_requirements()?;
+
     // TODO: is this a good tick interval?
-    init();
     let tick = chan::tick_ms(1000);
-    let pool = establish_connection();
+    let pool = establish_connection()?;
 
     loop {
         chan_select! {
             tick.recv() => {
                 let current_timestamp = utils::get_current_timestamp();
-                let jobs = get_jobs_to_run(&pool, current_timestamp);
-                for job in jobs {
-                    let result = run(&pool, job);
-                    match result {
-                        Ok(job) => log(&format!("Successyull ran job: {:?}", job)),
-                        Err(err) => log(&format!("ERROR: {:?}", err)),
-                    }
+
+                match get_jobs_to_run(&pool, current_timestamp) {
+                    Ok(jobs) => {
+                        for job in jobs {
+                            match run(&pool, job) {
+                                Ok(job) => log(&format!("Successyull ran job: {:?}",job)),
+                                Err(err) => log(&format!("ERROR: {:?}", err)),
+                            }
+                        }
+                    },
+                    Err(err) => log(&format!("ERROR: {:?}", err))
                 }
             },
         }
@@ -74,21 +78,20 @@ pub fn run(pool: &PgPool, job: Job) -> Result<Job> {
     let next_run = utils::get_next_run(&job.schedule);
     let job = job.next_run(next_run);
 
-    let connection = pool.get().expect("Expected a connection");
+    let connection = pool.get()?;
     diesel::update(jobs::dsl::jobs.find(job.id))
         .set(&job)
-        .execute(&connection)
-        .expect("Error updating job");
+        .execute(&connection)?;
 
     Ok(job)
 }
 
-fn get_jobs_to_run(pool: &PgPool, current_timestamp: i32) -> Vec<Job> {
-    let connection = pool.get().expect("Expected a connection");
-
-    jobs::dsl::jobs
+fn get_jobs_to_run(pool: &PgPool, current_timestamp: i32) -> Result<Vec<Job>> {
+    let connection = pool.get()?;
+    let jobs = jobs::dsl::jobs
         // TODO: is `eq` sufficient? maybe use `ge` greater-equal
         .filter(jobs::dsl::next_run.eq(current_timestamp))
-        .load::<Job>(&connection)
-        .expect("Error loading jobs")
+        .load::<Job>(&connection)?;
+
+    Ok(jobs)
 }

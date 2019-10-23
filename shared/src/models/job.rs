@@ -2,11 +2,11 @@
 use diesel::{prelude::*, AsChangeset, Insertable, Queryable};
 
 // internal
-use super::super::Context;
 use crate::database::PgPool;
 use crate::models::secret::Secret;
 use crate::schema::jobs;
 use crate::schema::secrets;
+use crate::Context;
 
 #[derive(Queryable, AsChangeset, Identifiable, Debug)]
 pub struct Job {

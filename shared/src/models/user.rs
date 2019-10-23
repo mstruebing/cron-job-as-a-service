@@ -3,10 +3,10 @@ use diesel::{prelude::*, AsChangeset, Insertable, Queryable};
 use juniper;
 
 // internal
-use super::super::Context;
 use crate::models::job::Job;
 use crate::schema::jobs;
 use crate::schema::users;
+use crate::Context;
 
 #[derive(Queryable)]
 pub struct User {

@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate diesel;
 extern crate juniper;
+extern crate r2d2;
 
 pub mod database;
 pub mod error;

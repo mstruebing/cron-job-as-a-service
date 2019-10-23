@@ -2,7 +2,8 @@
 use diesel::{prelude::*, AsChangeset, Insertable, Queryable};
 
 // internal
-use crate::database;
+use super::super::Context;
+use crate::database::PgPool;
 use crate::models::secret::Secret;
 use crate::schema::jobs;
 use crate::schema::secrets;
@@ -51,7 +52,10 @@ pub struct UpdadedJobWithRuns {
     pub next_run: i32,
 }
 
-#[juniper::object(description = "A Job of a User")]
+#[juniper::object(
+    description = "A Job of a User",
+    Context = Context,
+)]
 impl Job {
     pub fn id(&self) -> i32 {
         self.id
@@ -77,16 +81,16 @@ impl Job {
         self.user_id
     }
 
-    pub fn secrets(&self) -> Vec<Secret> {
-        get_secrets(self)
+    pub fn secrets(&self, context: &Context) -> Vec<Secret> {
+        get_secrets(self, &context.pool)
     }
 }
 
 // TODO: Is it really neccessary to implement this and not using the one above
 // and add these methods there?
 impl Job {
-    pub fn secrets(&self) -> Vec<Secret> {
-        get_secrets(self)
+    pub fn secrets(&self, context: &Context) -> Vec<Secret> {
+        get_secrets(self, &context.pool)
     }
 
     pub fn last_run(mut self, last_run: i32) -> Self {
@@ -100,8 +104,8 @@ impl Job {
     }
 }
 
-fn get_secrets(job: &Job) -> Vec<Secret> {
-    let connection = database::establish_connection();
+pub fn get_secrets(job: &Job, pool: &PgPool) -> Vec<Secret> {
+    let connection = pool.get().expect("Expected a connection");
 
     secrets::dsl::secrets
         .filter(secrets::dsl::job_id.eq(job.id))

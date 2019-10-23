@@ -68,5 +68,6 @@ mod tests {
     #[test]
     pub fn test_is_installed() {
         assert_eq!(is_installed("docker"), true);
+        assert_eq!(is_installed("ddoocckkeerr"), false);
     }
 }

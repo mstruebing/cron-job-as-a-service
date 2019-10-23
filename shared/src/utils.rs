@@ -50,12 +50,7 @@ pub fn transform_to_modified_cron_format(schedule: &str) -> String {
 }
 
 pub fn is_installed(command: &str) -> bool {
-    let mut args = "'command ".to_owned();
-    args.push_str(command);
-    args.push_str("'");
-    println!("{:?}", args);
-
-    Command::new("sh").arg("-c").arg(args).spawn().is_ok()
+    Command::new(command).output().is_ok()
 }
 
 #[cfg(test)]
@@ -66,5 +61,8 @@ mod tests {
     pub fn test_is_installed() {
         assert_eq!(is_installed("docker"), true);
         assert_eq!(is_installed("ddoocckkeerr"), false);
+
+        // to have one command which fails with an exit code != 0 with no arguments
+        assert_eq!(is_installed("grep"), true);
     }
 }

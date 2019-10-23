@@ -50,15 +50,12 @@ pub fn transform_to_modified_cron_format(schedule: &str) -> String {
 }
 
 pub fn is_installed(command: &str) -> bool {
-    match Command::new("sh")
-        .arg("-c")
-        .arg("command")
-        .arg(command)
-        .spawn()
-    {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    let mut args = "'command ".to_owned();
+    args.push_str(command);
+    args.push_str("'");
+    println!("{:?}", args);
+
+    Command::new("sh").arg("-c").arg(args).spawn().is_ok()
 }
 
 #[cfg(test)]

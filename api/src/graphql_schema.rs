@@ -54,13 +54,34 @@ impl QueryRoot {
     Context = Context,
 )]
 impl MutationRoot {
-    fn create_user(context: &Context, data: NewUser) -> User {
+    fn create_user(context: &Context, mut data: NewUser) -> User {
         let connection = context.pool.get().expect("Expected a connection");
+
+        // TODO: Error handling
+        data.password = utils::hash_password(&data.password).unwrap();
 
         diesel::insert_into(users::table)
             .values(&data)
             .get_result(&connection)
             .expect("Error saving user")
+    }
+
+    fn login(context: &Context, data: NewUser) -> String {
+        let connection = context.pool.get().expect("Expected a connection");
+
+        let result: Vec<String> = users::table
+            .find(1)
+            .select(users::password)
+            .filter(users::dsl::email.eq(data.email))
+            .load(&connection)
+            .expect("Stuff");
+
+        let hash = result[0].clone();
+        let correct = utils::verify_hash(&hash, &data.password).unwrap();
+
+        if correct {}
+
+        "123".to_string()
     }
 
     fn create_job(context: &Context, data: NewJob) -> Job {

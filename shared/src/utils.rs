@@ -2,8 +2,17 @@
 use std::{process::Command, str::FromStr, time};
 
 // modules
+use argonautica::{Hasher, Verifier};
 use chrono::Utc;
 use cron::Schedule;
+
+// own modules
+use crate::error::{Error, Result};
+
+// TODO: Extract secret
+pub fn get_secret_key() -> String {
+    "0123".repeat(8)
+}
 
 pub fn get_current_timestamp() -> i32 {
     let start = time::SystemTime::now();
@@ -51,6 +60,24 @@ pub fn transform_to_modified_cron_format(schedule: &str) -> String {
 
 pub fn is_installed(command: &str) -> bool {
     Command::new(command).output().is_ok()
+}
+
+// WARNING THIS IS ONLY FOR DEMO PLEASE DO MORE RESEARCH FOR PRODUCTION USE
+pub fn hash_password(password: &str) -> Result<String> {
+    Hasher::default()
+        .with_password(password)
+        .with_secret_key(get_secret_key())
+        .hash()
+        .map_err(Error::from)
+}
+
+pub fn verify_hash(hash: &str, password: &str) -> Result<bool> {
+    Verifier::default()
+        .with_hash(hash)
+        .with_password(password)
+        .with_secret_key(get_secret_key())
+        .verify()
+        .map_err(Error::from)
 }
 
 #[cfg(test)]

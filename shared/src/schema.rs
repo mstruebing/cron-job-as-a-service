@@ -29,4 +29,8 @@ table! {
 joinable!(jobs -> users (user_id));
 joinable!(secrets -> jobs (job_id));
 
-allow_tables_to_appear_in_same_query!(jobs, secrets, users,);
+allow_tables_to_appear_in_same_query!(
+    jobs,
+    secrets,
+    users,
+);

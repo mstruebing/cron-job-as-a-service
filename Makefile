@@ -37,7 +37,7 @@ db-start:
 	docker-compose -f misc/docker-compose.yml up
 
 db-connect:
-	docker-compose exec postgresql 'psql --user postgres cronjob_as_a_service'
+	cd misc && docker-compose exec postgresql 'psql --user postgres cronjob_as_a_service'
 
 db-reset:
 	cd shared && (diesel migration redo || diesel migration run)

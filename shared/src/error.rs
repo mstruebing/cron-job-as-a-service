@@ -2,10 +2,9 @@
 use std::{fmt, io, result};
 
 // modules
+use argonautica;
 use diesel;
 use dotenv;
-// TODO: Do I really need this full dependency only to implement the error?
-use argonautica;
 use r2d2;
 
 pub type Result<T, E = Error> = result::Result<T, E>;
@@ -17,6 +16,7 @@ pub enum Error {
     Diesel(diesel::result::Error),
     R2d2(r2d2::Error),
     Argonautica(argonautica::Error),
+    Env(std::env::VarError),
 }
 
 impl fmt::Display for Error {
@@ -28,6 +28,7 @@ impl fmt::Display for Error {
             Diesel(err) => write!(fmt, "Diesel error ({})", err),
             R2d2(err) => write!(fmt, "R2d2 error ({})", err),
             Argonautica(err) => write!(fmt, "Argonautica error ({})", err),
+            Env(err) => write!(fmt, "Env Var error ({})", err),
         }
     }
 }
@@ -59,5 +60,11 @@ impl From<r2d2::Error> for Error {
 impl From<argonautica::Error> for Error {
     fn from(err: argonautica::Error) -> Self {
         Error::Argonautica(err)
+    }
+}
+
+impl From<std::env::VarError> for Error {
+    fn from(err: std::env::VarError) -> Self {
+        Error::Env(err)
     }
 }

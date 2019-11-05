@@ -15,7 +15,7 @@ pub struct User {
     pub password: String,
 }
 
-#[derive(juniper::GraphQLInputObject, Insertable)]
+#[derive(juniper::GraphQLInputObject, Insertable, Debug)]
 #[table_name = "users"]
 pub struct NewUser {
     pub email: String,

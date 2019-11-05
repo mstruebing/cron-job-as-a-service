@@ -18,6 +18,15 @@ run-api:
 run-runner:
 	cargo run --bin runner
 
+watch:
+	$(MAKE) -j2 watch-api watch-runner
+
+watch-api:
+	cargo watch -x 'run --bin api'
+
+watch-runner:
+	cargo watch -x 'run --bin runner'
+
 test:
 	cargo test
 

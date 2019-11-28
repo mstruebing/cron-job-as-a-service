@@ -21,10 +21,3 @@ CREATE TABLE secrets (
     key TEXT NOT NULL,
     value TEXT NOT NULL
 );
-
-INSERT INTO users(email, password) VALUES ('max@max.de', 'Heroes');
-INSERT INTO users(email, password) VALUES ('someone@example.com', 'some stuff');
-INSERT INTO jobs(user_id, schedule, command, last_run, next_run) VALUES (1, ('* * * * *'), 'echo $hello >> world.txt', 0, 0);
-INSERT INTO secrets(job_id, key, value) VALUES (1, 'hello', 'world');
-INSERT INTO jobs(user_id, schedule, command, last_run, next_run) VALUES (2, ('* * * * *'), 'echo $hello >> world.txt', 0, 0);
-INSERT INTO secrets(job_id, key, value) VALUES (2, 'hello', 'world');

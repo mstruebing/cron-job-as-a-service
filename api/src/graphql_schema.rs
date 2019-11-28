@@ -1,6 +1,6 @@
 // modules
 use diesel::prelude::*;
-use juniper::RootNode;
+use juniper::{graphql_value, FieldResult, RootNode};
 
 // internal
 use shared::{
@@ -24,28 +24,19 @@ pub fn create_schema() -> Schema {
     Context = Context,
 )]
 impl QueryRoot {
-    fn users(context: &Context) -> Vec<User> {
-        let connection = context.pool.get().expect("Expected a connection");
-
-        users::dsl::users
-            .load::<User>(&connection)
-            .expect("Error loading users")
+    fn users(context: &Context) -> FieldResult<Vec<User>> {
+        let connection = context.pool.get()?;
+        Ok(users::dsl::users.load::<User>(&connection)?)
     }
 
-    fn jobs(context: &Context) -> Vec<Job> {
-        let connection = context.pool.get().expect("Expected a connection");
-
-        jobs::dsl::jobs
-            .load::<Job>(&connection)
-            .expect("Error loading jobs")
+    fn jobs(context: &Context) -> FieldResult<Vec<Job>> {
+        let connection = context.pool.get()?;
+        Ok(jobs::dsl::jobs.load::<Job>(&connection)?)
     }
 
-    fn secrets(context: &Context) -> Vec<Secret> {
-        let connection = context.pool.get().expect("Expected a connection");
-
-        secrets::dsl::secrets
-            .load::<Secret>(&connection)
-            .expect("Error loading secrets")
+    fn secrets(context: &Context) -> FieldResult<Vec<Secret>> {
+        let connection = context.pool.get()?;
+        Ok(secrets::dsl::secrets.load::<Secret>(&connection)?)
     }
 }
 
@@ -54,17 +45,50 @@ impl QueryRoot {
     Context = Context,
 )]
 impl MutationRoot {
-    fn create_user(context: &Context, data: NewUser) -> User {
-        let connection = context.pool.get().expect("Expected a connection");
+    fn create_user(context: &Context, mut data: NewUser) -> FieldResult<User> {
+        let connection = context.pool.get()?;
+        data.password = utils::hash_password(&data.password)?;
 
-        diesel::insert_into(users::table)
+        Ok(diesel::insert_into(users::table)
             .values(&data)
-            .get_result(&connection)
-            .expect("Error saving user")
+            .get_result(&connection)?)
     }
 
-    fn create_job(context: &Context, data: NewJob) -> Job {
-        let connection = context.pool.get().expect("Expected a connection");
+    fn login(context: &Context, data: NewUser) -> FieldResult<String> {
+        let connection = context.pool.get().expect("bla");
+        println!("{:?}", data);
+
+        let result: Vec<String> = users::table
+            .select(users::password)
+            // TODO: Is there a better way than filter? I think this could be slow
+            // with many users
+            .filter(users::dsl::email.eq(data.email))
+            .load(&connection)
+            .expect("stuff");
+
+        if result.len() == 0 {
+            return Err(juniper::FieldError::new(
+                "User not found",
+                graphql_value!({ "message": "User not found" }),
+            ));
+        }
+
+        let hash = result[0].clone();
+        let result = utils::verify_hash(&hash, &data.password)?;
+
+        if !result {
+            return Err(juniper::FieldError::new(
+                "Login not succesfull",
+                graphql_value!({ "message": "Wrong credentials" }),
+            ));
+        }
+
+        // TODO: Generate token
+        Ok("123".to_string())
+    }
+
+    fn create_job(context: &Context, data: NewJob) -> FieldResult<Job> {
+        let connection = context.pool.get()?;
         let last_run = utils::get_current_timestamp();
         let next_run = utils::get_next_run(&data.schedule);
 
@@ -77,32 +101,29 @@ impl MutationRoot {
             next_run,
         };
 
-        diesel::insert_into(jobs::table)
+        Ok(diesel::insert_into(jobs::table)
             .values(&data)
-            .get_result(&connection)
-            .expect("Error saving job")
+            .get_result(&connection)?)
     }
 
-    fn create_secret(context: &Context, data: NewSecret) -> Secret {
-        let connection = context.pool.get().expect("Expected a connection");
+    fn create_secret(context: &Context, data: NewSecret) -> FieldResult<Secret> {
+        let connection = context.pool.get()?;
 
-        diesel::insert_into(secrets::table)
+        Ok(diesel::insert_into(secrets::table)
             .values(&data)
-            .get_result(&connection)
-            .expect("Error saving secret")
+            .get_result(&connection)?)
     }
 
-    fn update_user(context: &Context, id: i32, data: UpdatedUser) -> User {
-        let connection = context.pool.get().expect("Expected a connection");
+    fn update_user(context: &Context, id: i32, data: UpdatedUser) -> FieldResult<User> {
+        let connection = context.pool.get()?;
 
-        diesel::update(users::dsl::users.find(id))
+        Ok(diesel::update(users::dsl::users.find(id))
             .set(&data)
-            .get_result(&connection)
-            .expect("Error updating user")
+            .get_result(&connection)?)
     }
 
-    fn update_job(context: &Context, id: i32, data: UpdadedJob) -> Job {
-        let connection = context.pool.get().expect("Expected a connection");
+    fn update_job(context: &Context, id: i32, data: UpdadedJob) -> FieldResult<Job> {
+        let connection = context.pool.get()?;
 
         let last_run = utils::get_current_timestamp();
         let next_run = utils::get_next_run(&data.schedule);
@@ -115,48 +136,34 @@ impl MutationRoot {
             next_run,
         };
 
-        diesel::update(jobs::dsl::jobs.find(id))
+        Ok(diesel::update(jobs::dsl::jobs.find(id))
             .set(&data)
-            .get_result(&connection)
-            .expect("Error updating job")
+            .get_result(&connection)?)
     }
 
-    fn update_secret(context: &Context, id: i32, data: UpdatedSecret) -> Secret {
-        let connection = context.pool.get().expect("Expected a connection");
+    fn update_secret(context: &Context, id: i32, data: UpdatedSecret) -> FieldResult<Secret> {
+        let connection = context.pool.get()?;
 
-        diesel::update(secrets::dsl::secrets.find(id))
+        Ok(diesel::update(secrets::dsl::secrets.find(id))
             .set(&data)
-            .get_result(&connection)
-            .expect("Error updating secret")
+            .get_result(&connection)?)
     }
 
-    fn delete_user(context: &Context, id: i32) -> bool {
-        let connection = context.pool.get().expect("Expected a connection");
-
-        let num_deleted = diesel::delete(users::dsl::users.find(id))
-            .execute(&connection)
-            .expect("Error deleting user");
-
-        num_deleted != 0
+    fn delete_user(context: &Context, id: i32) -> FieldResult<bool> {
+        let connection = context.pool.get()?;
+        let num_deleted = diesel::delete(users::dsl::users.find(id)).execute(&connection)?;
+        Ok(num_deleted != 0)
     }
 
-    fn delete_job(context: &Context, id: i32) -> bool {
-        let connection = context.pool.get().expect("Expected a connection");
-
-        let num_deleted = diesel::delete(jobs::dsl::jobs.find(id))
-            .execute(&connection)
-            .expect("Error deleting job");
-
-        num_deleted != 0
+    fn delete_job(context: &Context, id: i32) -> FieldResult<bool> {
+        let connection = context.pool.get()?;
+        let num_deleted = diesel::delete(jobs::dsl::jobs.find(id)).execute(&connection)?;
+        Ok(num_deleted != 0)
     }
 
-    fn delete_secret(context: &Context, id: i32) -> bool {
-        let connection = context.pool.get().expect("Expected a connection");
-
-        let num_deleted = diesel::delete(secrets::dsl::secrets.find(id))
-            .execute(&connection)
-            .expect("Error deleting secret");
-
-        num_deleted != 0
+    fn delete_secret(context: &Context, id: i32) -> FieldResult<bool> {
+        let connection = context.pool.get()?;
+        let num_deleted = diesel::delete(secrets::dsl::secrets.find(id)).execute(&connection)?;
+        Ok(num_deleted != 0)
     }
 }

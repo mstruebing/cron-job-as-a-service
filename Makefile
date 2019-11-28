@@ -18,6 +18,15 @@ run-api:
 run-runner:
 	cargo run --bin runner
 
+watch:
+	$(MAKE) -j2 watch-api watch-runner
+
+watch-api:
+	cargo watch -x 'run --bin api'
+
+watch-runner:
+	cargo watch -x 'run --bin runner'
+
 test:
 	cargo test
 
@@ -37,7 +46,7 @@ db-start:
 	docker-compose -f misc/docker-compose.yml up
 
 db-connect:
-	docker-compose exec postgresql 'psql --user postgres cronjob_as_a_service'
+	cd misc && docker-compose exec postgresql 'psql --user postgres cronjob_as_a_service'
 
 db-reset:
 	cd shared && (diesel migration redo || diesel migration run)

@@ -3,6 +3,7 @@ use diesel::{prelude::*, AsChangeset, Insertable, Queryable};
 
 // internal
 use crate::database::PgPool;
+use crate::error::Result;
 use crate::models::secret::Secret;
 use crate::schema::jobs;
 use crate::schema::secrets;
@@ -82,17 +83,13 @@ impl Job {
     }
 
     pub fn secrets(&self, context: &Context) -> Vec<Secret> {
-        get_secrets(self, &context.pool)
+        get_secrets(self, &context.pool).unwrap()
     }
 }
 
 // TODO: Is it really neccessary to implement this and not using the one above
 // and add these methods there?
 impl Job {
-    pub fn secrets(&self, context: &Context) -> Vec<Secret> {
-        get_secrets(self, &context.pool)
-    }
-
     pub fn last_run(mut self, last_run: i32) -> Self {
         self.last_run = last_run;
         self
@@ -104,11 +101,10 @@ impl Job {
     }
 }
 
-pub fn get_secrets(job: &Job, pool: &PgPool) -> Vec<Secret> {
-    let connection = pool.get().expect("Expected a connection");
+pub fn get_secrets(job: &Job, pool: &PgPool) -> Result<Vec<Secret>> {
+    let connection = pool.get()?;
 
-    secrets::dsl::secrets
+    Ok(secrets::dsl::secrets
         .filter(secrets::dsl::job_id.eq(job.id))
-        .load::<Secret>(&connection)
-        .expect("Error loading jobs for user")
+        .load::<Secret>(&connection)?)
 }

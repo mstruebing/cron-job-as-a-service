@@ -16,10 +16,8 @@ pub type PgPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 pub fn establish_connection() -> Result<PgPool> {
     dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL")?;
     let pool = init_pool(&database_url)?;
-
     Ok(pool)
 }
 

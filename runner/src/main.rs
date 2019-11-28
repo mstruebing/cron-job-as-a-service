@@ -45,7 +45,7 @@ fn main() -> Result<()> {
                     Ok(jobs) => {
                         for job in jobs {
                             match run(&pool, job) {
-                                Ok(job) => log(&format!("Successyull ran job: {:?}",job)),
+                                Ok(job) => log(&format!("Successfully ran job: {:?}",job)),
                                 Err(err) => log(&format!("ERROR: {:?}", err)),
                             }
                         }
@@ -58,7 +58,7 @@ fn main() -> Result<()> {
 }
 
 pub fn run(pool: &PgPool, job: Job) -> Result<Job> {
-    let secrets = get_secrets(&job, &pool);
+    let secrets = get_secrets(&job, &pool)?;
     let args = if !secrets.is_empty() {
         let args = secrets
             .iter()

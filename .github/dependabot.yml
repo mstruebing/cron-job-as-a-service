@@ -1,0 +1,28 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: serde
+    versions:
+    - 1.0.123
+    - 1.0.124
+  - dependency-name: serde_json
+    versions:
+    - 1.0.61
+    - 1.0.62
+    - 1.0.63
+  - dependency-name: cron
+    versions:
+    - 0.7.0
+    - 0.8.0
+  - dependency-name: juniper
+    versions:
+    - 0.15.3
+  - dependency-name: diesel
+    versions:
+    - 1.4.5

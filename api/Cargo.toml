@@ -10,7 +10,7 @@ edition = "2018"
 shared = { path = "../shared", version = "0.1.0" }
 actix-web = "1.0.9"
 diesel = { version = "1.4.3", features = ["postgres", "r2d2"] }
-futures = "0.1.29"
+futures = "0.1.31"
 juniper = "0.14.2"
 serde = "1.0.105"
 serde_derive = "1.0.102"
